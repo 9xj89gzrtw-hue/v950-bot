@@ -442,6 +442,54 @@ else
 fi
 
 # ============================================================================
+# Layer 9: Persistent daemon (v9.37 G68 — auto-start)
+# ============================================================================
+log ""
+log "[Layer 9] Persistent daemon (v9.37 G68)"
+
+DAEMON_SCRIPT="$PROJECT_ROOT/scripts/v937_daemon.py"
+DAEMON_PID_FILE="$PROJECT_ROOT/scripts/v937_daemon.pid"
+DAEMON_SOCK="$PROJECT_ROOT/scripts/v937_daemon.sock"
+
+if [ ! -f "$DAEMON_SCRIPT" ]; then
+    log "  SKIP: v937_daemon.py not found"
+else
+    DAEMON_RUNNING=false
+    if [ -f "$DAEMON_PID_FILE" ]; then
+        DAEMON_PID=$(cat "$DAEMON_PID_FILE")
+        if kill -0 "$DAEMON_PID" 2>/dev/null; then
+            DAEMON_RUNNING=true
+        fi
+    fi
+    
+    if [ "$DAEMON_RUNNING" = true ]; then
+        log "  OK: daemon running (PID=$DAEMON_PID)"
+        if python3 "$DAEMON_SCRIPT" --run health >/dev/null 2>&1; then
+            log "  health check: OK"
+        else
+            log "  health check: FAIL — daemon may be stuck"
+        fi
+    else
+        log "  daemon not running"
+        if [ "$CHECK_ONLY" = false ]; then
+            log "  starting daemon..."
+            python3 "$DAEMON_SCRIPT" --start >/dev/null 2>&1
+            sleep 3
+            if [ -f "$DAEMON_PID_FILE" ]; then
+                NEW_PID=$(cat "$DAEMON_PID_FILE")
+                if kill -0 "$NEW_PID" 2>/dev/null; then
+                    log "  OK: daemon started (PID=$NEW_PID)"
+                else
+                    log "  WARN: daemon PID dead"
+                fi
+            else
+                log "  WARN: daemon may not have started"
+            fi
+        fi
+    fi
+fi
+
+# ============================================================================
 # Final verification
 # ============================================================================
 log ""

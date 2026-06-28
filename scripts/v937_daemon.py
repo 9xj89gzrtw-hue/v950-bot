@@ -212,6 +212,26 @@ def cmd_health(args):
     }
 
 
+def cmd_llm_chat(args):
+    """Unified LLM chat with cache + retry + fallback (v9.38)."""
+    if not args:
+        return {"error": "need args: prompt [system]"}
+    prompt = args[0]
+    system = args[1] if len(args) > 1 else ""
+    # Import lazily so daemon startup doesn't pay the cost
+    sys.path.insert(0, '/home/z/my-project/scripts')
+    from v938_llm_client import llm_chat
+    result = llm_chat(prompt, system, verbose=False)
+    return result
+
+
+def cmd_llm_cache_stats(args):
+    """Return LLM cache statistics."""
+    sys.path.insert(0, '/home/z/my-project/scripts')
+    from v938_llm_client import cache_stats
+    return cache_stats()
+
+
 COMMANDS = {
     "g0_check": cmd_g0_check,
     "z3_verify": cmd_z3_verify,
@@ -219,6 +239,8 @@ COMMANDS = {
     "bert_check_primary_goal": cmd_bert_check_primary_goal,
     "w2v_sim": cmd_w2v_sim,
     "health": cmd_health,
+    "llm_chat": cmd_llm_chat,
+    "llm_cache_stats": cmd_llm_cache_stats,
 }
 
 
