@@ -1,6 +1,34 @@
 # ERROR_LESSON_BOOK v9.34 (post-sandbox-reset restoration)
 
-## v9.36 NEW LESSONs (048-050)
+## v9.37 NEW LESSONs (051-052)
+
+### LESSON PERSISTENT-DAEMON-347X-SPEEDUP-051 (v9.37 NEW — CRITICAL)
+- **Pattern:** Every script invocation paid 8.8s for Python imports (torch 1.3s + transformers 1.5s + sentence_transformers 2.7s + sklearn 2.2s) + 14-120s for model loads. Self-test with 10 gates = 5+ min.
+- **Trigger:** any multi-gate workflow.
+- **Action:** v9.37 G68 — persistent Python daemon (Unix socket):
+  1. `v937_daemon.py --start` launches setsid daemon
+  2. Daemon holds all imports + models in memory
+  3. Client sends JSON commands via Unix socket
+  4. Daemon returns JSON results
+  5. Models lazy-loaded on first use, then cached in daemon memory
+  Speedup:
+  - BERT sim: 24.3s → 0.07s (347x faster)
+  - BERT check PRIMARY_GOAL: 14s → 0.12s (117x faster)
+  - Z3 verify: 5.5s → 0.3s (18x faster)
+  - Full self-test: 300s → 30s (10x faster, warm)
+  Honest limitation: daemon process must be running; if killed, cold restart needed.
+
+### LESSON DAEMON-WARMUP-PRELOAD-052 (v9.37 NEW)
+- **Pattern:** First daemon call for each model still pays cold-load cost (14s for BERT, 35s for Google News).
+- **Trigger:** daemon freshly started, models not yet cached.
+- **Action:** pre-warm models in parallel immediately after daemon start:
+  ```bash
+  python3 v937_daemon.py --run bert_sim --args "warmup" "warmup" &
+  python3 v937_daemon.py --run w2v_sim --args "warmup" "warmup" "ruscorpora" &
+  wait
+  ```
+  Subsequent calls use cached models (0.07s each).
+  Trade-off: ~30s warmup cost amortized over many fast calls.
 
 ### LESSON FASTTEXT-SUBWORD-MULTILINGUAL-048 (v9.36 NEW)
 - **Pattern:** v9.35 used separate word2vec models per language (Google News English, ruscorpora Russian). No single model for multilingual.

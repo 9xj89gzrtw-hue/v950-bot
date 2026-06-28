@@ -1,0 +1,11 @@
+{
+  "test": "v9.37_fast_self_test_daemon",
+  "timestamp": "2026-06-28T13:32:24Z",
+  "elapsed_sec": 30,
+  "pass_count": 8,
+  "fail_count": 0,
+  "total": 8,
+  "pass_rate_pct": 100.0,
+  "all_pass": true,
+  "speedup_vs_v936": "300s -> 30s"
+}
