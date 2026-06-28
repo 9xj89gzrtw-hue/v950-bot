@@ -1,0 +1,197 @@
+# v9.54 Backstage Catalog — Service Definitions
+# ================================================
+# Describes all v9.53 services for the developer portal.
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: v950-meta-prompt
+  description: v9.53 Meta-Prompt Infrastructure System
+spec:
+  owner: platform-team
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: telegram-bot
+  description: Telegram bot for v9.53 infrastructure control
+  tags:
+    - python
+    - telegram
+    - llm
+    - bot
+  links:
+    - url: https://t.me/MyGlm52_bot
+      title: Telegram Bot
+      icon: chat
+    - url: https://render.com
+      title: Render Dashboard
+      icon: dashboard
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  system: v950-meta-prompt
+  dependsOn:
+    - component:llm-gateway
+    - component:safety-filter
+    - resource:default/telegram-bot-token
+  providesApis:
+    - api:telegram-webhook
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: llm-gateway
+  description: Multi-provider LLM gateway (z-ai + Pollinations + cache)
+  tags:
+    - python
+    - llm
+    - gateway
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  system: v950-meta-prompt
+  dependsOn:
+    - resource:default/zai-api
+    - resource:default/pollinations-api
+  providesApis:
+    - api:llm-chat
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: safety-filter
+  description: 3-layer safety filter (regex + BERT + LLM judge)
+  tags:
+    - python
+    - bert
+    - security
+    - safety
+spec:
+  type: service
+  lifecycle: production
+  owner: security-team
+  system: v950-meta-prompt
+  dependsOn:
+    - resource:default/bert-model
+  providesApis:
+    - api:safety-check
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: audit-blockchain
+  description: Tamper-proof audit log with PoW blockchain
+  tags:
+    - python
+    - blockchain
+    - audit
+spec:
+  type: service
+  lifecycle: production
+  owner: security-team
+  system: v950-meta-prompt
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: red-team
+  description: Automated red team testing (18 attacks, 6 categories)
+  tags:
+    - python
+    - security
+    - testing
+spec:
+  type: service
+  lifecycle: production
+  owner: security-team
+  system: v950-meta-prompt
+  dependsOn:
+    - component:safety-filter
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: telegram-bot-token
+  description: Telegram Bot API token
+spec:
+  type: secret
+  owner: platform-team
+  system: v950-meta-prompt
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: zai-api
+  description: Z.ai GLM-4-plus API (primary LLM)
+spec:
+  type: api
+  owner: platform-team
+  system: v950-meta-prompt
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: pollinations-api
+  description: Pollinations GPT-OSS-20B API (fallback LLM, free)
+spec:
+  type: api
+  owner: platform-team
+  system: v950-meta-prompt
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: bert-model
+  description: all-MiniLM-L6-v2 BERT model (semantic safety)
+spec:
+  type: model
+  owner: security-team
+  system: v950-meta-prompt
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: telegram-webhook
+  description: Telegram bot webhook endpoint
+spec:
+  type: openapi
+  lifecycle: production
+  owner: platform-team
+  definition:
+    $text: ./openapi.yaml
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: llm-chat
+  description: LLM chat API (z-ai + Pollinations fallback)
+spec:
+  type: graphql
+  lifecycle: production
+  owner: platform-team
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: safety-check
+  description: 3-layer safety check API (regex + BERT + LLM judge)
+spec:
+  type: openapi
+  lifecycle: production
+  owner: security-team

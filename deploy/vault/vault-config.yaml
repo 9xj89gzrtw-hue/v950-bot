@@ -1,0 +1,117 @@
+# v9.54 HashiCorp Vault — Secrets Management
+# ============================================
+# Centralized secrets: Telegram token, API keys, TLS certs.
+# No secrets in code, env vars, or K8s Secrets (unencrypted).
+#
+# Install Vault:
+#   helm install vault hashicorp/vault --namespace vault --create-namespace
+#   kubectl exec -n vault vault-0 -- vault operator init
+#   kubectl apply -f vault/
+
+---
+# VaultPolicy: bot can read only its secrets
+apiVersion: vault.banzaicloud.com/v1alpha1
+kind: VaultPolicy
+metadata:
+  name: v950-bot-policy
+  namespace: v950-bot
+spec:
+  name: v950-bot
+  rules: |
+    path "secret/data/v950/telegram" {
+      capabilities = ["read"]
+    }
+    path "secret/data/v950/llm-providers" {
+      capabilities = ["read"]
+    }
+    path "secret/data/v950/tls" {
+      capabilities = ["read"]
+    }
+
+---
+# VaultSecret: store Telegram credentials
+apiVersion: vault.banzaicloud.com/v1alpha1
+kind: VaultSecret
+metadata:
+  name: telegram-credentials
+  namespace: v950-bot
+spec:
+  path: secret/v950/telegram
+  type: kv
+  data:
+    - name: bot_token
+      value: "${TELEGRAM_BOT_TOKEN}"
+    - name: chat_id
+      value: "${TELEGRAM_CHAT_ID}"
+
+---
+# VaultSecret: LLM provider config
+apiVersion: vault.banzaicloud.com/v1alpha1
+kind: VaultSecret
+metadata:
+  name: llm-providers
+  namespace: v950-bot
+spec:
+  path: secret/v950/llm-providers
+  type: kv
+  data:
+    - name: zai_endpoint
+      value: "https://api.z.ai/v1/chat/completions"
+    - name: pollinations_endpoint
+      value: "https://text.pollinations.ai/openai"
+    - name: zai_model
+      value: "glm-4-plus"
+    - name: pollinations_model
+      value: "gpt-oss-20b"
+
+---
+# VaultSecret: TLS certificates
+apiVersion: vault.banzaicloud.com/v1alpha1
+kind: VaultSecret
+metadata:
+  name: tls-certs
+  namespace: v950-bot
+spec:
+  path: secret/v950/tls
+  type: kv
+  data:
+    - name: cert
+      value: "${TLS_CERT}"
+    - name: key
+      value: "${TLS_KEY}"
+
+---
+# MutatingWebhook: inject Vault sidecar into bot pod
+# Bot pod automatically gets secrets from Vault (no env vars needed)
+apiVersion: apps.banzaicloud.io/v1alpha1
+kind: VaultApp
+metadata:
+  name: telegram-bot-vault
+  namespace: v950-bot
+spec:
+  serviceName: telegram-bot
+  secrets:
+    - name: telegram-credentials
+      path: secret/v950/telegram
+      target: /app/secrets/telegram.json
+    - name: llm-providers
+      path: secret/v950/llm-providers
+      target: /app/secrets/providers.json
+  policies:
+    - v950-bot
+  # Auto-rotate secrets every 24h
+  secretRenewal:
+    enabled: true
+    interval: 24h
+
+---
+# VaultAuth: Kubernetes auth method
+apiVersion: vault.banzaicloud.com/v1alpha1
+kind: VaultAuth
+metadata:
+  name: v950-bot-auth
+  namespace: v950-bot
+spec:
+  vaultRole: v950-bot
+  kubernetesRole: v950-bot-sa
+  path: kubernetes

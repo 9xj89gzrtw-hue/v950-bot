@@ -1,0 +1,78 @@
+# v9.54 Backstage Developer Portal
+# ===================================
+# Internal developer portal: service catalog, docs, templates.
+#
+# Install Backstage:
+#   npx @backstage/create-app@latest v950-portal
+#   cd v950-portal
+#   Copy this file to app-config.local.yaml
+#   npm start
+
+app:
+  title: v9.53 Developer Portal
+  baseUrl: http://localhost:3000
+
+organization:
+  name: v9.53 Meta-Prompt
+
+# ============================================================================
+# SERVICE CATALOG
+# ============================================================================
+
+catalog:
+  locations:
+    # v9.50 Telegram Bot service
+    - type: file
+      target: ./catalog-info.yaml
+      rules:
+        - allow: [Component, Resource, API]
+
+    # System definition
+    - type: file
+      target: ./system.yaml
+      rules:
+        - allow: [System]
+
+# ============================================================================
+# INTEGRATIONS
+# ============================================================================
+
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}
+
+# ============================================================================
+# PROXY (for external APIs)
+# ============================================================================
+
+proxy:
+  endpoints:
+    /prometheus:
+      target: http://prometheus:9090
+    /grafana:
+      target: http://grafana:3000
+      auth: "admin:admin"
+
+# ============================================================================
+# TECHDOCS
+# ============================================================================
+
+techdocs:
+  builder: 'local'
+  generator:
+    runIn: 'local'
+  publisher:
+    type: 'local'
+
+# ============================================================================
+# KUBERNETES PLUGIN
+# ============================================================================
+
+kubernetes:
+  serviceLocatorMethod:
+    type: 'config'
+  clusters:
+    - url: ${K8S_CLUSTER_URL}
+      name: v950-cluster
+      authProvider: 'aws'
