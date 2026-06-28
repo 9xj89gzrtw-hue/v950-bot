@@ -1,0 +1,16 @@
+apiVersion: v2
+name: v950-telegram-bot
+description: v9.50 Meta-Prompt Telegram Bot with 105 gates
+type: application
+version: 9.50.0
+appVersion: "9.50"
+maintainers:
+  - name: v9.50
+icon: https://raw.githubusercontent.com/python/python/main/Icons/python-logo.png
+keywords:
+  - telegram
+  - bot
+  - llm
+  - safety
+  - z3
+  - bert

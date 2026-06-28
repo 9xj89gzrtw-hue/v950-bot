@@ -1,0 +1,25 @@
+# v9.50 Telegram Bot — Render.com deployment
+# 
+# DEPLOY STEPS (5 minutes, free tier):
+# 1. Create GitHub repo, push deploy/ folder + scripts/
+# 2. Go to render.com → New → Web Service
+# 3. Connect GitHub repo
+# 4. Render auto-detects render.yaml → Deploy
+# 5. Bot runs 24/7 on Render free tier
+
+services:
+  - type: web
+    name: v950-telegram-bot
+    runtime: python
+    plan: free  # $0/month
+    buildCommand: pip install -r requirements.txt
+    startCommand: python v948_pullbot.py --loop --interval 10
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false  # set manually in Render dashboard
+      - key: TELEGRAM_CHAT_ID
+        sync: false  # set manually in Render dashboard
+    healthCheckPath: /health
+    autoDeploy: true

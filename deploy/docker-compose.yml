@@ -1,0 +1,39 @@
+# v9.50 Telegram Bot — Docker Compose
+# ONE COMMAND: docker-compose up -d
+version: "3.8"
+
+services:
+  bot:
+    build: .
+    container_name: v950-telegram-bot
+    restart: always  # auto-restart on crash
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Persist state across restarts
+      - bot-state:/app/state
+      - bot-data:/app/data
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "1.0"
+      restart_policy:
+        condition: any
+        max_attempts: 50
+        window: 120s
+    healthcheck:
+      test: ["CMD", "python3", "-c", "print('ok')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  bot-state:
+  bot-data:

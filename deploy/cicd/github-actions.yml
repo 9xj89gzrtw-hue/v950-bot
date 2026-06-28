@@ -1,0 +1,144 @@
+# v9.51 GitHub Actions CI/CD Pipeline
+# 
+# What it does:
+# 1. On push: run tests (red team, chaos, safety)
+# 2. On tag: build Docker image + push to registry
+# 3. On main: auto-deploy to Kubernetes
+#
+# Setup:
+# 1. Push code to GitHub
+# 2. Add secrets: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+# 3. Every push to main → auto-test + auto-deploy
+
+name: v9.51 CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/telegram-bot
+
+jobs:
+  # ============================================================================
+  # STAGE 1: TEST (runs on every push/PR)
+  # ============================================================================
+  test:
+    name: 🔬 Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: |
+          pip install z3-solver gensim scikit-learn numpy cryptography
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install sentence-transformers transformers
+          npm install -g z-ai-web-dev-sdk
+      
+      - name: G0 Immutable Core Check
+        run: python scripts/g0_check.py
+      
+      - name: Z3 Formal Verification
+        run: python scripts/v928_z3_formal_verify.py
+      
+      - name: Red Team (18 attacks)
+        run: python scripts/v946_redteam.py run
+      
+      - name: Safety Filter Benchmark
+        run: python scripts/v949_hybrid_safety.py benchmark
+      
+      - name: Chaos Engineering
+        run: python scripts/v947_chaos.py run-all
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            scripts/v946_redteam_report.json
+            scripts/v947_chaos_report.json
+  
+  # ============================================================================
+  # STAGE 2: BUILD (runs on tags only)
+  # ============================================================================
+  build:
+    name: 🐳 Build Docker Image
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=tag
+            type=raw,value=latest
+      
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: deploy/
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+  
+  # ============================================================================
+  # STAGE 3: DEPLOY (runs on main branch after build)
+  # ============================================================================
+  deploy:
+    name: 🚀 Deploy to K8s
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+      
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+      
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f deploy/kubernetes/
+          kubectl set image deployment/telegram-bot bot=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }} -n v950-bot
+          kubectl rollout status deployment/telegram-bot -n v950-bot --timeout=120s
+      
+      - name: Notify Telegram
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "{\"chat_id\":\"${{ secrets.TELEGRAM_CHAT_ID }}\",\"text\":\"🚀 Deployed v${{ github.ref_name }} to K8s\"}"

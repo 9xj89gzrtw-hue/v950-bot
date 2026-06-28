@@ -1,0 +1,54 @@
+# v9.51 Monitoring Stack — docker-compose for Prometheus + Grafana
+#
+# Deploy: docker-compose -f monitoring-stack.yml up -d
+# Access:
+#   Prometheus: http://localhost:9090
+#   Grafana: http://localhost:3000 (admin/admin)
+
+version: "3.8"
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: v950-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=30d'
+    restart: always
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: v950-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana-datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
+      - ./v940_grafana_dashboard.json:/var/lib/grafana/dashboards/v950-dashboard.json
+      - ./grafana-dashboard-provider.yml:/etc/grafana/provisioning/dashboards/provider.yml
+    depends_on:
+      - prometheus
+    restart: always
+
+  # Optional: alert manager for notifications
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: v950-alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    restart: always
+
+volumes:
+  prometheus-data:
+  grafana-data:

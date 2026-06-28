@@ -1,0 +1,50 @@
+# Default values for v950-telegram-bot
+replicaCount: 1  # MUST be 1 (Telegram doesn't support multiple consumers)
+
+image:
+  repository: v950/telegram-bot
+  tag: latest
+  pullPolicy: IfNotPresent
+
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "250m"
+  limits:
+    memory: "2Gi"
+    cpu: "1000m"
+
+# Telegram credentials (set via --set or values.yaml)
+telegram:
+  botToken: ""  # REQUIRED: --set telegram.botToken=YOUR_TOKEN
+  chatId: ""    # REQUIRED: --set telegram.chatId=YOUR_CHAT_ID
+
+# Polling interval (seconds)
+pollingInterval: 10
+
+# Persistence
+persistence:
+  enabled: true
+  size: 1Gi
+  storageClass: ""
+
+# Health checks
+livenessProbe:
+  initialDelaySeconds: 10
+  periodSeconds: 30
+readinessProbe:
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+# Monitoring
+monitoring:
+  enabled: true
+  prometheus: true
+  grafana: true
+
+# Safety filters
+safety:
+  regex: true
+  bert: true
+  llmJudge: false  # expensive, off by default
+  bertThreshold: 0.60
