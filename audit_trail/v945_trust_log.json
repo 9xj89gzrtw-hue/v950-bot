@@ -1,0 +1,16 @@
+[
+  {
+    "timestamp": "2026-06-28T15:11:15Z",
+    "identity": "alice",
+    "success": true,
+    "reason": "accessed g0_check",
+    "new_trust_score": 1.0
+  },
+  {
+    "timestamp": "2026-06-28T15:11:15Z",
+    "identity": "bob",
+    "success": false,
+    "reason": "role mismatch: identity has ['user'], policy requires ['admin']",
+    "new_trust_score": 0.7
+  }
+]

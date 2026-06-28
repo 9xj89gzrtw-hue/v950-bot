@@ -28,3 +28,12 @@ evidence.db-journal
 # OS
 .DS_Store
 Thumbs.db
+scripts/v944_telegram_config.json
+scripts/v944_tee_hw_key
+scripts/v944_oauth_secret
+scripts/v944_oauth_clients.json
+scripts/v941_ws_token
+scripts/v942_webhook_config.json
+scripts/v943_dp_budget.json
+audit_trail/v943_zkp_proofs.json
+audit_trail/v943_blockchain.json
