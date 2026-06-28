@@ -1,12 +1,10 @@
 services:
   - type: web
     name: v950-telegram-bot
-    runtime: python
+    runtime: docker
     plan: free
-    buildCommand: |
-      pip install -r requirements.txt
-      npm install -g z-ai-web-dev-sdk 2>/dev/null || true
-    startCommand: python v948_pullbot.py --loop --interval 10
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"

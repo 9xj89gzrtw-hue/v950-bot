@@ -211,6 +211,13 @@ def run_loop(interval=10):
         log("ERROR: No TELEGRAM_BOT_TOKEN set!")
         sys.exit(1)
     
+    # Start health check HTTP server (for Render port detection)
+    try:
+        health_port = start_health_server()
+        log(f"Health server on port {health_port}")
+    except Exception as e:
+        log(f"Health server failed (non-critical): {e}")
+    
     log(f"v9.56 bot starting (interval={interval}s)")
     log(f"Chat ID: {config.get('chat_id')}")
     
@@ -245,3 +252,30 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# ============================================================================
+# MINIMAL HTTP SERVER (for Render port detection)
+# ============================================================================
+def start_health_server():
+    """Start minimal HTTP server on $PORT for Render health check."""
+    import http.server
+    port = int(os.environ.get("PORT", 10000))
+    
+    class HealthHandler(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path == "/health":
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain")
+                self.end_headers()
+                self.wfile.write(b"OK")
+            else:
+                self.send_response(404)
+                self.end_headers()
+        def log_message(self, *args):
+            pass  # silent
+    
+    server = http.server.HTTPServer(("0.0.0.0", port), HealthHandler)
+    import threading
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return port
