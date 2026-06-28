@@ -1,0 +1,28 @@
+[2026-06-28T19:11:25Z] [bootstrap] === v9.34 bootstrap start ===
+[2026-06-28T19:11:25Z] [bootstrap] check_only=false verify_only=false
+[2026-06-28T19:11:25Z] [bootstrap] 
+[2026-06-28T19:11:25Z] [bootstrap] [Layer 1] pip packages
+[2026-06-28T19:11:43Z] [bootstrap] 
+[2026-06-28T19:11:43Z] [bootstrap] [Layer 2] benchmark datasets
+[2026-06-28T19:11:43Z] [bootstrap]   OK: truthfulqa (503550 bytes)
+[2026-06-28T19:11:43Z] [bootstrap]   OK: advbench (82125 bytes)
+[2026-06-28T19:11:43Z] [bootstrap]   OK: harmbench (198850 bytes)
+[2026-06-28T19:11:43Z] [bootstrap] 
+[2026-06-28T19:11:43Z] [bootstrap] [Layer 3] meta-prompt source
+[2026-06-28T19:11:43Z] [bootstrap]   OK: PRIMARY_GOAL hash matches (03ac49234eeb9000)
+[2026-06-28T19:11:43Z] [bootstrap] 
+[2026-06-28T19:11:43Z] [bootstrap] [Layer 4] Google News 300-dim word2vec (1.6GB)
+[2026-06-28T19:11:43Z] [bootstrap]   OK: Google News .gz complete (1743563840 bytes), .kv cache will be built on first use
+[2026-06-28T19:11:43Z] [bootstrap] 
+[2026-06-28T19:11:43Z] [bootstrap] [Layer 5] output.md fixture
+[2026-06-28T19:11:43Z] [bootstrap]   MISSING: output.md
+[2026-06-28T19:11:43Z] [bootstrap]   OK: output.md created
+[2026-06-28T19:11:43Z] [bootstrap] 
+[2026-06-28T19:11:43Z] [bootstrap] [Layer 6] git state
+[2026-06-28T19:11:43Z] [bootstrap]   git repo exists, 34 commits
+[2026-06-28T19:11:43Z] [bootstrap] 
+[2026-06-28T19:11:43Z] [bootstrap] [Layer 7] BERT models (sentence-transformers)
+[2026-06-28T19:11:52Z] [bootstrap]   MISSING: sentence-transformers/all-MiniLM-L6-v2 (~80MB) — G58 BERT semantic Z3 (general-purpose)
+[2026-06-28T19:11:52Z] [bootstrap]     downloading (auto-cache to /home/z/my-project/scripts/hf_cache)...
+[2026-06-28T19:12:06Z] [bootstrap]   MISSING: sentence-transformers/paraphrase-MiniLM-L6-v2 (~80MB) — G61 paraphrase-tuned semantic Z3 (PAWS+MRPC+Quora)
+[2026-06-28T19:12:06Z] [bootstrap]     downloading (auto-cache to /home/z/my-project/scripts/hf_cache)...

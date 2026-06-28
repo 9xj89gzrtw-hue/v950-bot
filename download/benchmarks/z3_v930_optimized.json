@@ -1,17 +1,17 @@
 {
   "test": "G51-Z3-string-theory-optimized",
   "version": "v9.30",
-  "total_time_sec": 6.882,
+  "total_time_sec": 6.793,
   "per_phrase": [
     {
       "phrase": "с первой попытки",
       "result": "sat",
-      "time_sec": 0.085
+      "time_sec": 0.08
     },
     {
       "phrase": "никогда не врут",
       "result": "sat",
-      "time_sec": 0.042
+      "time_sec": 0.041
     },
     {
       "phrase": "лучшие в мире промпты",
@@ -21,7 +21,7 @@
     {
       "phrase": "решают задачи",
       "result": "sat",
-      "time_sec": 0.036
+      "time_sec": 0.035
     },
     {
       "phrase": "Создавать",
@@ -33,55 +33,55 @@
     {
       "attack": "U+200B ZWSP",
       "result": "sat",
-      "time_sec": 2.027,
+      "time_sec": 2.033,
       "interpretation": "SAT — hash check mandatory"
     },
     {
       "attack": "U+200C ZWNJ",
       "result": "sat",
-      "time_sec": 2.28,
+      "time_sec": 2.237,
       "interpretation": "SAT — hash check mandatory"
     },
     {
       "attack": "U+00A0 NBSP",
       "result": "sat",
-      "time_sec": 0.147,
+      "time_sec": 0.146,
       "interpretation": "SAT — hash check mandatory"
     },
     {
       "attack": "U+FEFF BOM",
       "result": "sat",
-      "time_sec": 0.916,
+      "time_sec": 0.9,
       "interpretation": "SAT — hash check mandatory"
     },
     {
       "attack": "U+037E Greek question mark",
       "result": "sat",
-      "time_sec": 0.21,
+      "time_sec": 0.208,
       "interpretation": "SAT — hash check mandatory"
     },
     {
       "attack": "U+200D ZWJ",
       "result": "sat",
-      "time_sec": 0.266,
+      "time_sec": 0.265,
       "interpretation": "SAT — hash check mandatory"
     },
     {
       "attack": "U+2060 Word Joiner",
       "result": "sat",
-      "time_sec": 0.566,
+      "time_sec": 0.55,
       "interpretation": "SAT — hash check mandatory"
     },
     {
       "attack": "U+00AD Soft hyphen",
       "result": "sat",
-      "time_sec": 0.16,
+      "time_sec": 0.159,
       "interpretation": "SAT — hash check mandatory"
     }
   ],
   "hash_injectivity": {
     "result": "UNSAT — formally PROVEN",
-    "time_sec": 0.1
+    "time_sec": 0.097
   },
   "concrete_checks": {
     "hash_pass": true,
