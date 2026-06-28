@@ -166,17 +166,22 @@ def format_cost():
 
 def llm_chat(prompt, system=""):
     """LLM chat via daemon."""
-    r = run_daemon_cmd("llm_chat", [prompt, system], timeout=180)
+    r = run_daemon_cmd("llm_chat", [prompt, system], timeout=300)
     if not r.get("ok"):
-        return f"❌ Error: {r.get('error')}"
+        return f"❌ Error: {r.get('error')}\n\nDaemon may be busy. Try again in a moment."
     
     result = r["result"]
     content = result.get("content", "")
     model = result.get("model", "?")
     cached = result.get("cached", False)
     tokens = result.get("tokens", 0)
+    attempts = result.get("attempts", 0)
+    chain = result.get("provider_chain", [])
     
     cache_str = "📦 cached" if cached else f"🆕 {tokens} tokens"
+    if not cached and attempts > 1:
+        cache_str += f", {attempts} attempts (fallback used)"
+    
     return f"🤖 {model} ({cache_str})\n\n{content}"
 
 
@@ -324,26 +329,43 @@ def start_bot():
                 
                 print(f"Received: {text[:50]}")
                 
-                # Handle command
-                response = handle_command(text)
+                # Send "typing" indicator
+                try:
+                    typing_url = f"{base_url}/sendChatAction"
+                    typing_payload = json.dumps({"chat_id": from_chat_id, "action": "typing"}).encode()
+                    typing_req = urllib.request.Request(typing_url, data=typing_payload, headers={"Content-Type": "application/json"}, method="POST")
+                    urllib.request.urlopen(typing_req, timeout=5)
+                except Exception:
+                    pass  # non-critical
+                
+                # Handle command (with timeout + error handling)
+                try:
+                    response = handle_command(text)
+                except Exception as cmd_err:
+                    response = f"❌ Command error: {cmd_err}\n\nTry /help for available commands."
+                    print(f"Command error: {cmd_err}")
                 
                 # Send response
                 send_url = f"{base_url}/sendMessage"
-                payload = json.dumps({
-                    "chat_id": from_chat_id,
-                    "text": response[:4000],  # Telegram limit
-                }).encode("utf-8")
-                send_req = urllib.request.Request(
-                    send_url,
-                    data=payload,
-                    headers={"Content-Type": "application/json"},
-                    method="POST",
-                )
-                try:
-                    urllib.request.urlopen(send_req, timeout=10)
-                    print(f"Sent: {response[:50]}...")
-                except Exception as send_err:
-                    print(f"Send error: {send_err}")
+                # Split long responses into chunks (Telegram limit: 4096 chars)
+                chunks = [response[i:i+4000] for i in range(0, len(response), 4000)]
+                for chunk in chunks:
+                    payload = json.dumps({
+                        "chat_id": from_chat_id,
+                        "text": chunk,
+                    }).encode("utf-8")
+                    send_req = urllib.request.Request(
+                        send_url,
+                        data=payload,
+                        headers={"Content-Type": "application/json"},
+                        method="POST",
+                    )
+                    try:
+                        urllib.request.urlopen(send_req, timeout=30)
+                        print(f"Sent: {chunk[:50]}...")
+                    except Exception as send_err:
+                        print(f"Send error: {send_err}")
+                    time.sleep(0.1)  # rate limit
         
         except Exception as e:
             print(f"Error: {e}")
