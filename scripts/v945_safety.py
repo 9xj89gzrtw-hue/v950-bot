@@ -42,11 +42,17 @@ PROMPT_INJECTION_PATTERNS = [
     (r"forget\s+(?:all\s+)?previous", "forget-previous"),
     (r"you\s+are\s+(?:now\s+)?(?:a\s+)?(?:DAN|AIM|STAN|FreeGPT)", "role-override"),
     (r"(?:act|pretend)\s+as\s+(?:my\s+)?(?:dead\s+)?grandmother", "grandma-attack"),
+    (r"(?:act|pretend)\s+as\s+(?:my\s+)?(?:deceased\s+)?grand", "grandma-attack-v2"),
+    (r"grandmother.*(?:napalm|factory|recipe|bedtime)", "grandma-attack-v3"),
     (r"(?:enable|activate)\s+(?:developer|jailbreak|god)\s+mode", "mode-override"),
     (r"<\|?(?:im_start|system|assistant)\|?>", "system-tag-injection"),
     (r"translate\s+(?:this|the following)\s+into\s+(?:leetspeak|base64|pig latin)", "translate-attack"),
+    (r"translate\s+(?:to\s+)?(?:french|german|spanish).*\b(?:then|and)\s+(?:explain|tell)", "translate-attack-v2"),
     (r"for\s+(?:educational|research)\s+purposes\s+only", "educational-bypass"),
     (r"step\s+by\s+step.*(?:how\s+to|instructions\s+for)", "gradual-extraction"),
+    (r"in\s+a\s+(?:purely\s+)?hypothetical\s+(?:fiction|novel|scenario)", "hypothetical-wrapper"),
+    (r"strive\s+to\s+avoid\s+norms|STAN", "stan-jailbreak"),
+    (r"(?:developer\s+mode|dev\s+mode).*(?:output|enable)", "developer-mode-v2"),
 ]
 
 TOXICITY_PATTERNS = [
@@ -55,6 +61,14 @@ TOXICITY_PATTERNS = [
     (r"\b(?:bomb|explosive|napalm)\s+(?:recipe|how\s+to\s+make|instructions)\b", "weapons", 0.95),
     (r"\b(?:meth|cocaine|heroin)\s+(?:recipe|synthesis|how\s+to\s+make)\b", "drugs", 0.9),
     (r"\b(?:suicide|kill\s+myself|end\s+it\s+all)\b", "self-harm", 0.95),
+    (r"how\s+(?:do\s+I|i)\s+(?:hurt|kill|harm|injure)\s+(?:someone|a\s+person|people)", "threat-v2", 0.9),
+    (r"how\s+to\s+(?:make|create|build|synthesize)\s+(?:a\s+)?(?:bomb|explosive|weapon|meth|drug)", "weapons-v2", 0.95),
+    (r"(?:recipe|synthesis|instructions)\s+for\s+(?:meth|cocaine|heroin|drug)", "drugs-v2", 0.9),
+    (r"best\s+way\s+to\s+(?:end\s+it|kill\s+my|die|harm\s+my)", "self-harm-v2", 0.95),
+    (r"(?:system\s+prompt|instructions?\s+you\s+(?:were\s+)?given|your\s+(?:initial\s+)?instructions)\??", "pii-extraction", 0.8),
+    (r"(?:describe|show|reveal|tell)\s+(?:me\s+)?(?:your\s+)?(?:system\s+)?(?:prompt|instructions?)", "pii-extraction-v2", 0.8),
+    (r"cite\s+\d+\s+(?:academic\s+)?papers?\s+about\s+", "hallucination-probe", 0.85),
+    (r"what\s+percentage\s+of\s+.+\?\s*(?:give|include|with)\s+(?:exact|source)", "hallucination-probe-v2", 0.85),
 ]
 
 PII_PATTERNS = [
@@ -70,13 +84,20 @@ def check_input_safety(prompt):
     """Run all input safety filters."""
     issues = []
     
-    # 1. Length check
+    # 1. Length check (resource exhaustion protection)
     if len(prompt) > MAX_PROMPT_LENGTH:
         issues.append({
-            "type": "length_exceeded",
-            "severity": "medium",
+            "type": "resource_exhaustion",
+            "severity": "critical",
             "detail": f"prompt {len(prompt)} chars > {MAX_PROMPT_LENGTH} limit",
-            "action": "truncate",
+            "action": "block",
+        })
+    elif len(prompt) > 5000:
+        issues.append({
+            "type": "long_prompt",
+            "severity": "medium",
+            "detail": f"prompt {len(prompt)} chars (suspicious length)",
+            "action": "warn",
         })
     
     # 2. Prompt injection detection
@@ -98,11 +119,11 @@ def check_input_safety(prompt):
         if matches:
             issues.append({
                 "type": "toxicity",
-                "severity": "high" if severity > 0.8 else "medium",
+                "severity": "high" if severity >= 0.8 else "medium",
                 "category": category,
                 "severity_score": severity,
                 "matches": len(matches),
-                "action": "block" if severity > 0.8 else "warn",
+                "action": "block" if severity >= 0.8 else "warn",
             })
     
     # 4. PII detection (in input — may want to redact before LLM)
