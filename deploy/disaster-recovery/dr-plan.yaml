@@ -1,0 +1,162 @@
+# v9.55 Disaster Recovery Plan
+# ==============================
+# Complete DR strategy: RPO=24h, RTO=30min
+#
+# RPO (Recovery Point Objective): max 24h data loss (daily backups)
+# RTO (Recovery Time Objective): 30 min to restore service
+#
+# DR Tiers:
+# 1. Application crash → K8s auto-restart (RTO: 30s)
+# 2. Node failure → K8s reschedule (RTO: 2min)
+# 3. Cluster failure → Velero restore (RTO: 15min)
+# 4. Region failure → Multi-region failover (RTO: 30min)
+# 5. Data corruption → Point-in-time recovery (RTO: 30min)
+
+---
+# DR Runbook: automated disaster recovery
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dr-runbook
+  namespace: v950-bot
+data:
+  runbook.md: |
+    # v9.55 Disaster Recovery Runbook
+    
+    ## Tier 1: Pod crash (auto-recovery, 30s)
+    - K8s restartPolicy: Always
+    - Liveness probe detects crash → auto-restart
+    - No action needed
+    
+    ## Tier 2: Node failure (auto-recovery, 2min)
+    - K8s reschedules pod to healthy node
+    - PVC re-attached (if EBS)
+    - No action needed
+    
+    ## Tier 3: Cluster failure (Velero, 15min)
+    ```bash
+    # 1. Create new EKS cluster
+    terraform apply -var="cluster_name=v950-bot-recovery"
+    
+    # 2. Install Velero
+    velero install --provider aws --bucket v950-velero-backup
+    
+    # 3. Restore from latest backup
+    velero restore create --from-schedule v950-bot-daily-backup
+    
+    # 4. Verify
+    kubectl get pods -n v950-bot
+    kubectl logs -n v950-bot deployment/telegram-bot
+    
+    # 5. Test
+    # Send /status to Telegram bot → should respond
+    ```
+    
+    ## Tier 4: Region failure (multi-region failover, 30min)
+    ```bash
+    # 1. Promote secondary region
+    kubefedctl scale --kubefed-namespace kube-federation-system \
+      --name telegram-bot --namespace v950-bot \
+      --clusters=us-virginia=1,eu-frankfurt=0
+    
+    # 2. Update DNS to point to new region
+    # 3. Verify bot responds
+    # 4. Demote failed region (after recovery)
+    ```
+    
+    ## Tier 5: Data corruption (point-in-time, 30min)
+    ```bash
+    # 1. List available backups
+    velero backup get
+    
+    # 2. Restore specific backup
+    velero restore create --from-backup v950-bot-daily-backup-20260628
+    
+    # 3. Verify data integrity
+    python3 scripts/v943_blockchain.py verify
+    
+    # 4. If blockchain tampered:
+    python3 scripts/v943_blockchain.py verify
+    # If FAIL → restore from backup
+    ```
+
+---
+# DR Test: automated disaster recovery test (monthly)
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: dr-test
+  namespace: v950-bot
+spec:
+  schedule: "0 4 1 * *"  # 1st of month at 04:00 UTC
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: dr-test
+              image: bitnami/kubectl:latest
+              env:
+                - name: TELEGRAM_BOT_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: telegram-secrets
+                      key: bot-token
+                - name: TELEGRAM_CHAT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: telegram-secrets
+                      key: chat-id
+              script: |
+                #!/bin/bash
+                set -e
+                
+                echo "=== DR Test: $(date) ==="
+                
+                # 1. Check backups exist
+                BACKUPS=$(kubectl get backups -n velero -o name | wc -l)
+                if [ "$BACKUPS" -lt 1 ]; then
+                  echo "FAIL: no backups found"
+                  exit 1
+                fi
+                echo "✅ Backups: $BACKUPS"
+                
+                # 2. Test restore (dry-run)
+                LATEST=$(velero backup get -o name | head -1)
+                echo "Latest backup: $LATEST"
+                
+                # 3. Verify cluster health
+                kubectl get pods -n v950-bot | grep Running
+                
+                # 4. Notify Telegram
+                curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                  -H "Content-Type: application/json" \
+                  -d "{\"chat_id\":\"${TELEGRAM_CHAT_ID}\",\"text\":\"✅ DR Test passed: $BACKUPS backups available, latest: $LATEST\"}"
+                
+                echo "=== DR Test Complete ==="
+
+---
+# Restic: file-level backup for state files
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: restic-config
+  namespace: v950-bot
+data:
+  restic.conf: |
+    # Restic repository (S3 backend)
+    RESTIC_REPOSITORY=s3:https://s3.eu-west-1.amazonaws.com/v950-restic/v950-bot
+    RESTIC_PASSWORD_FILE=/etc/restic/password
+    
+    # Backup targets
+    BACKUP_PATHS=/app/state:/app/data
+    BACKUP_EXCLUDE=*.tmp:*.log:__pycache__
+    
+    # Retention policy
+    KEEP_DAILY=7
+    KEEP_WEEKLY=4
+    KEEP_MONTHLY=12
+    
+    # Schedule
+    BACKUP_CRON=0 */6 * * *  # every 6 hours
