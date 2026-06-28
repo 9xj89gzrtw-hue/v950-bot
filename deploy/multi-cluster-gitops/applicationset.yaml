@@ -1,0 +1,116 @@
+# v9.56 Multi-Cluster GitOps (ArgoCD ApplicationSet)
+# =====================================================
+# Manage multiple K8s clusters from single ArgoCD instance.
+# Git push → all clusters auto-sync.
+
+---
+# ApplicationSet: deploy to multiple clusters
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: v950-bot-multi-cluster
+  namespace: argocd
+spec:
+  generators:
+    # List of clusters
+    - list:
+        elements:
+          - cluster: https://kubernetes.default.svc
+            name: eu-frankfurt
+            env: prod
+            namespace: v950-bot-prod
+          - cluster: https://1.2.3.4:6443
+            name: us-virginia
+            env: standby
+            namespace: v950-bot-standby
+          - cluster: https://5.6.7.8:6443
+            name: asia-singapore
+            env: standby
+            namespace: v950-bot-standby
+  template:
+    metadata:
+      name: 'v950-bot-{{name}}'
+      labels:
+        app: v950-bot
+        cluster: '{{name}}'
+        env: '{{env}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/9xj89gzrtw-hue/v950-bot
+        targetRevision: main
+        path: deploy/kubernetes
+      destination:
+        server: '{{cluster}}'
+        namespace: '{{namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+
+---
+# ApplicationSet: per-cluster overrides
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: v950-bot-overrides
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - cluster: eu-frankfurt
+            replicas: "1"  # active
+            resources_memory: "2Gi"
+          - cluster: us-virginia
+            replicas: "0"  # standby
+            resources_memory: "512Mi"
+          - cluster: asia-singapore
+            replicas: "0"  # standby
+            resources_memory: "512Mi"
+  template:
+    metadata:
+      name: 'v950-bot-override-{{cluster}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/9xj89gzrtw-hue/v950-bot
+        targetRevision: main
+        path: deploy/helm/v950-bot
+        helm:
+          parameters:
+            - name: replicaCount
+              value: '{{replicas}}'
+            - name: resources.limits.memory
+              value: '{{resources_memory}}'
+            - name: telegram.botToken
+              value: '${TELEGRAM_BOT_TOKEN}'
+            - name: telegram.chatId
+              value: '${TELEGRAM_CHAT_ID}'
+      destination:
+        server: 'https://{{cluster}}:6443'
+        namespace: v950-bot
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+
+---
+# ArgoCD Notifications: notify on sync events
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-notifications
+  namespace: argocd
+spec:
+  source:
+    repoURL: https://github.com/9xj89gzrtw-hue/v950-bot
+    path: deploy/argocd-notifications
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
