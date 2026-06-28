@@ -1,0 +1,37 @@
+[2026-06-28T11:43:01Z] [bootstrap] === v9.34 bootstrap start ===
+[2026-06-28T11:43:01Z] [bootstrap] check_only=true verify_only=false
+[2026-06-28T11:43:01Z] [bootstrap] 
+[2026-06-28T11:43:01Z] [bootstrap] [Layer 1] pip packages
+[2026-06-28T11:43:04Z] [bootstrap]   MISSING: tokenizers (import as tokenizers)
+[2026-06-28T11:43:04Z] [bootstrap]   MISSING: z3-solver (import as z3)
+[2026-06-28T11:43:06Z] [bootstrap]   MISSING: sentence-transformers (import as sentence_transformers)
+[2026-06-28T11:43:06Z] [bootstrap]   MISSING: torch (import as torch)
+[2026-06-28T11:43:06Z] [bootstrap]   MISSING: transformers (import as transformers)
+[2026-06-28T11:43:06Z] [bootstrap]   (skip install in --check mode)
+[2026-06-28T11:43:06Z] [bootstrap] 
+[2026-06-28T11:43:06Z] [bootstrap] [Layer 2] benchmark datasets
+[2026-06-28T11:43:07Z] [bootstrap]   OK: truthfulqa (503550 bytes)
+[2026-06-28T11:43:07Z] [bootstrap]   OK: advbench (82125 bytes)
+[2026-06-28T11:43:07Z] [bootstrap]   OK: harmbench (198850 bytes)
+[2026-06-28T11:43:07Z] [bootstrap] 
+[2026-06-28T11:43:07Z] [bootstrap] [Layer 3] meta-prompt source
+[2026-06-28T11:43:07Z] [bootstrap]   OK: PRIMARY_GOAL hash matches (03ac49234eeb9000)
+[2026-06-28T11:43:07Z] [bootstrap] 
+[2026-06-28T11:43:07Z] [bootstrap] [Layer 4] Google News 300-dim word2vec (1.6GB)
+[2026-06-28T11:43:07Z] [bootstrap]   OK: Google News .kv cache exists (104150506 bytes)
+[2026-06-28T11:43:07Z] [bootstrap] 
+[2026-06-28T11:43:07Z] [bootstrap] [Layer 5] output.md fixture
+[2026-06-28T11:43:07Z] [bootstrap]   OK: output.md exists
+[2026-06-28T11:43:07Z] [bootstrap] 
+[2026-06-28T11:43:07Z] [bootstrap] [Layer 6] git state
+[2026-06-28T11:43:07Z] [bootstrap]   git repo exists, 2 commits
+[2026-06-28T11:43:07Z] [bootstrap] 
+[2026-06-28T11:43:07Z] [bootstrap] [Verification]
+[2026-06-28T11:43:07Z] [bootstrap]   G0 IMMUTABLE-CORE-PROTECTION-CHECK...
+[2026-06-28T11:43:07Z] [bootstrap]     FAIL (may be normal if meta-prompt source is stub)
+[2026-06-28T11:43:07Z] [bootstrap]   G53 audit chain verify...
+[2026-06-28T11:43:07Z] [bootstrap]     PASS
+[2026-06-28T11:43:07Z] [bootstrap]   disk: c-6a40f8ff-148bea08-c35dd7490df2-rootfs  9.9G  8.2G  1.2G  89% /
+[2026-06-28T11:43:07Z] [bootstrap] 
+[2026-06-28T11:43:07Z] [bootstrap] === bootstrap complete ===
+[2026-06-28T11:43:07Z] [bootstrap] log file: /home/z/my-project/download/bootstrap_20260628T114301Z.log

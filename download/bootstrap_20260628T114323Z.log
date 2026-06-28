@@ -1,0 +1,12 @@
+[2026-06-28T11:43:23Z] [bootstrap] === v9.34 bootstrap start ===
+[2026-06-28T11:43:23Z] [bootstrap] check_only=false verify_only=false
+[2026-06-28T11:43:23Z] [bootstrap] 
+[2026-06-28T11:43:23Z] [bootstrap] [Layer 1] pip packages
+[2026-06-28T11:43:25Z] [bootstrap]   MISSING: tokenizers (import as tokenizers)
+[2026-06-28T11:43:25Z] [bootstrap]   MISSING: z3-solver (import as z3)
+[2026-06-28T11:43:28Z] [bootstrap]   MISSING: sentence-transformers (import as sentence_transformers)
+[2026-06-28T11:43:28Z] [bootstrap]   MISSING: torch (import as torch)
+[2026-06-28T11:43:28Z] [bootstrap]   MISSING: transformers (import as transformers)
+[2026-06-28T11:43:28Z] [bootstrap]   installing 5 missing packages...
+[2026-06-28T11:43:30Z] [bootstrap]   installing z3-solver (any)...
+[2026-06-28T11:43:35Z] [bootstrap]   installing sentence-transformers (any)...
