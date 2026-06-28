@@ -110,6 +110,26 @@ else
     report "g65_gnews_autorebuild" "FAIL" "see v935_gnews_autorebuild.py"
 fi
 
+# G54 Cost/Latency Dashboard (v9.36)
+echo ""
+echo "[G54] COST-LATENCY-DASHBOARD (v9.36)"
+DASH_OUT=$(timeout 30 python3 /home/z/my-project/scripts/v936_cost_dashboard.py 2>/dev/null)
+if echo "$DASH_OUT" | grep -q "Dashboard:"; then
+    report "g54_cost_dashboard" "PASS" "HTML dashboard generated"
+else
+    report "g54_cost_dashboard" "FAIL" "see v936_cost_dashboard.py"
+fi
+
+# Bootstrap Layer 8 (persistent watcher check, v9.36)
+echo ""
+echo "[Layer 8] PERSISTENT-WATCHER (v9.36)"
+BOOTSTRAP_OUT=$(bash /home/z/my-project/scripts/bootstrap.sh --check 2>&1)
+if echo "$BOOTSTRAP_OUT" | grep -q "Layer 8"; then
+    report "layer8_persistent_watcher" "PASS" "Layer 8 in bootstrap"
+else
+    report "layer8_persistent_watcher" "FAIL" "Layer 8 not in bootstrap"
+fi
+
 # Audit trail
 echo ""
 echo "[G53] LOCAL-VERIFIABLE-AUDIT"

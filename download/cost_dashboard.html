@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>v9.36 Cost/Latency Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body { font-family: -apple-system, sans-serif; margin: 20px; background: #f5f5f5; }
+        h1 { color: #333; }
+        .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0; }
+        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .card h3 { margin: 0 0 5px 0; color: #666; font-size: 12px; text-transform: uppercase; }
+        .card .value { font-size: 24px; font-weight: bold; color: #2563eb; }
+        .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .chart-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 13px; }
+        th { background: #f8f9fa; font-weight: 600; }
+        tr:hover { background: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <h1>v9.36 Cost/Latency Dashboard</h1>
+    <p>Generated: 2026-06-28 13:14:25 UTC</p>
+    
+    <div class="summary">
+        <div class="card">
+            <h3>Total Tasks</h3>
+            <div class="value">4</div>
+        </div>
+        <div class="card">
+            <h3>Total LLM Tokens</h3>
+            <div class="value">9,099</div>
+        </div>
+        <div class="card">
+            <h3>Total LLM Calls</h3>
+            <div class="value">3</div>
+        </div>
+        <div class="card">
+            <h3>Total Cost</h3>
+            <div class="value">$0.0000</div>
+        </div>
+    </div>
+    
+    <div class="charts">
+        <div class="chart-container">
+            <h3>LLM Tokens per Task</h3>
+            <canvas id="tokensChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Wall-Clock Time per Task (seconds)</h3>
+            <canvas id="wallChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>LLM Calls vs Bash Calls</h3>
+            <canvas id="callsChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Bash Wall Time per Task</h3>
+            <canvas id="bashWallChart"></canvas>
+        </div>
+    </div>
+    
+    <h2>Per-Task Detail</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Task ID</th>
+                <th>LLM Calls</th>
+                <th>LLM Tokens</th>
+                <th>Bash Calls</th>
+                <th>Bash Wall</th>
+                <th>Wall Clock</th>
+                <th>Cost USD</th>
+                <th>Start Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            
+        <tr>
+            <td>g65-test</td>
+            <td>0</td>
+            <td>0</td>
+            <td>1</td>
+            <td>27.1s</td>
+            <td>0.0s</td>
+            <td>$0.0000</td>
+            <td>2026-06-28T13:10:09Z</td>
+        </tr>
+        <tr>
+            <td>g66-russian</td>
+            <td>1</td>
+            <td>2,070</td>
+            <td>1</td>
+            <td>1.7s</td>
+            <td>1.0s</td>
+            <td>$0.0000</td>
+            <td>2026-06-28T13:10:09Z</td>
+        </tr>
+        <tr>
+            <td>g63-external</td>
+            <td>1</td>
+            <td>4,559</td>
+            <td>1</td>
+            <td>5.2s</td>
+            <td>0.0s</td>
+            <td>$0.0000</td>
+            <td>2026-06-28T13:10:10Z</td>
+        </tr>
+        <tr>
+            <td>g64-gnews</td>
+            <td>1</td>
+            <td>2,470</td>
+            <td>1</td>
+            <td>25.0s</td>
+            <td>0.0s</td>
+            <td>$0.0000</td>
+            <td>2026-06-28T13:10:10Z</td>
+        </tr>
+        </tbody>
+    </table>
+    
+    <script>
+        const taskIds = ["g65-test", "g66-russian", "g63-external", "g64-gnews"];
+        const tokensData = [0, 2070, 4559, 2470];
+        const wallData = [0.0, 1.0, 0.0, 0.0];
+        const llmCallsData = [0, 1, 1, 1];
+        const bashCallsData = [1, 1, 1, 1];
+        
+        // Tokens chart
+        new Chart(document.getElementById('tokensChart'), {
+            type: 'bar',
+            data: {
+                labels: taskIds,
+                datasets: [{ label: 'LLM Tokens', data: tokensData, backgroundColor: '#2563eb' }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+        
+        // Wall clock chart
+        new Chart(document.getElementById('wallChart'), {
+            type: 'bar',
+            data: {
+                labels: taskIds,
+                datasets: [{ label: 'Wall Clock (s)', data: wallData, backgroundColor: '#16a34a' }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+        
+        // Calls comparison (stacked bar)
+        new Chart(document.getElementById('callsChart'), {
+            type: 'bar',
+            data: {
+                labels: taskIds,
+                datasets: [
+                    { label: 'LLM Calls', data: llmCallsData, backgroundColor: '#dc2626' },
+                    { label: 'Bash Calls', data: bashCallsData, backgroundColor: '#0891b2' }
+                ]
+            },
+            options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true } } }
+        });
+        
+        // Bash wall time
+        new Chart(document.getElementById('bashWallChart'), {
+            type: 'bar',
+            data: {
+                labels: taskIds,
+                datasets: [{ label: 'Bash Wall (s)', data: [27.1, 1.7, 5.2, 25.0], backgroundColor: '#7c3aed' }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+    </script>
+</body>
+</html>

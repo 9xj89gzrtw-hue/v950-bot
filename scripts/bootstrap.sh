@@ -391,6 +391,57 @@ if [ "$DISK_AVAIL_MB" -lt 500 ]; then
 fi
 
 # ============================================================================
+# Layer 8: Persistent watcher (PID-file resurrection pattern, v9.35 G56)
+# ============================================================================
+log ""
+log "[Layer 8] Persistent watcher (v9.35 G56)"
+
+WATCHER_SCRIPT="$PROJECT_ROOT/scripts/v928_periodic_watcher.sh"
+PERSISTENT_WATCHER="$PROJECT_ROOT/scripts/v931_persistent_watcher.sh"
+HEARTBEAT_FILE="$PROJECT_ROOT/download/periodic_logs/heartbeat.txt"
+WATCHER_PID_FILE="$PROJECT_ROOT/download/periodic_logs/watcher.pid"
+
+# Check if persistent watcher script exists (from v9.31)
+if [ ! -f "$PERSISTENT_WATCHER" ]; then
+    log "  SKIP: v931_persistent_watcher.sh not found (was v9.31 script, may need restoration)"
+    log "  (using basic v928 watcher instead)"
+    if [ -f "$WATCHER_SCRIPT" ]; then
+        log "  basic watcher available: $WATCHER_SCRIPT"
+    fi
+else
+    # Check heartbeat freshness
+    if [ -f "$HEARTBEAT_FILE" ]; then
+        HB_CONTENT=$(cat "$HEARTBEAT_FILE")
+        HB_TS=$(echo "$HB_CONTENT" | grep -oE 'heartbeat=[^ ]+' | cut -d= -f2)
+        HB_PID=$(echo "$HB_CONTENT" | grep -oE 'pid=[0-9]+' | cut -d= -f2)
+        
+        if [ -n "$HB_PID" ] && kill -0 "$HB_PID" 2>/dev/null; then
+            log "  OK: watcher alive (PID=$HB_PID, heartbeat=$HB_TS)"
+        else
+            log "  watcher PID=$HB_PID dead — resurrecting"
+            if [ "$CHECK_ONLY" = false ]; then
+                bash "$PERSISTENT_WATCHER" --check >/dev/null 2>&1
+                log "  resurrection triggered"
+            fi
+        fi
+    else
+        log "  no heartbeat file — watcher not started"
+        if [ "$CHECK_ONLY" = false ]; then
+            log "  starting persistent watcher..."
+            # Use setsid to detach from current shell
+            setsid bash "$PERSISTENT_WATCHER" --watcher > /dev/null 2>&1 < /dev/null &
+            disown
+            sleep 2
+            if [ -f "$HEARTBEAT_FILE" ]; then
+                log "  OK: watcher started, heartbeat written"
+            else
+                log "  WARN: watcher may not have started (sandbox limitation)"
+            fi
+        fi
+    fi
+fi
+
+# ============================================================================
 # Final verification
 # ============================================================================
 log ""

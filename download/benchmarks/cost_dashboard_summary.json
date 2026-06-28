@@ -1,0 +1,183 @@
+{
+  "generated": "2026-06-28T13:14:25.189843Z",
+  "total_tasks": 4,
+  "total_llm_tokens": 9099,
+  "total_llm_calls": 3,
+  "total_bash_calls": 4,
+  "total_bash_wall_sec": 59.0,
+  "total_cost_usd": 0.0,
+  "tasks": [
+    {
+      "task_id": "g65-test",
+      "start_ts": "2026-06-28T13:10:09Z",
+      "end_ts": "2026-06-28T13:10:09Z",
+      "llm_calls": 0,
+      "llm_tokens": 0,
+      "bash_calls": 1,
+      "bash_wall_sec": 27.1,
+      "events": [
+        {
+          "task_id": "g65-test",
+          "event_type": "start",
+          "timestamp": "2026-06-28T13:10:09Z",
+          "tokens": 0,
+          "duration_sec": 0.0,
+          "metadata": "{}"
+        },
+        {
+          "task_id": "g65-test",
+          "event_type": "bash_call",
+          "timestamp": "2026-06-28T13:10:09Z",
+          "tokens": 0,
+          "duration_sec": 27.1,
+          "metadata": "{}"
+        },
+        {
+          "task_id": "g65-test",
+          "event_type": "end",
+          "timestamp": "2026-06-28T13:10:09Z",
+          "tokens": 0,
+          "duration_sec": 0.0,
+          "metadata": "{}"
+        }
+      ],
+      "wall_clock_sec": 0.0,
+      "cost_usd": 0.0
+    },
+    {
+      "task_id": "g66-russian",
+      "start_ts": "2026-06-28T13:10:09Z",
+      "end_ts": "2026-06-28T13:10:10Z",
+      "llm_calls": 1,
+      "llm_tokens": 2070,
+      "bash_calls": 1,
+      "bash_wall_sec": 1.7,
+      "events": [
+        {
+          "task_id": "g66-russian",
+          "event_type": "start",
+          "timestamp": "2026-06-28T13:10:09Z",
+          "tokens": 0,
+          "duration_sec": 0.0,
+          "metadata": "{}"
+        },
+        {
+          "task_id": "g66-russian",
+          "event_type": "llm_call",
+          "timestamp": "2026-06-28T13:10:09Z",
+          "tokens": 2070,
+          "duration_sec": 0.0,
+          "metadata": "{}"
+        },
+        {
+          "task_id": "g66-russian",
+          "event_type": "bash_call",
+          "timestamp": "2026-06-28T13:10:09Z",
+          "tokens": 0,
+          "duration_sec": 1.7,
+          "metadata": "{}"
+        },
+        {
+          "task_id": "g66-russian",
+          "event_type": "end",
+          "timestamp": "2026-06-28T13:10:10Z",
+          "tokens": 0,
+          "duration_sec": 0.0,
+          "metadata": "{}"
+        }
+      ],
+      "wall_clock_sec": 1.0,
+      "cost_usd": 0.0
+    },
+    {
+      "task_id": "g63-external",
+      "start_ts": "2026-06-28T13:10:10Z",
+      "end_ts": "2026-06-28T13:10:10Z",
+      "llm_calls": 1,
+      "llm_tokens": 4559,
+      "bash_calls": 1,
+      "bash_wall_sec": 5.2,
+      "events": [
+        {
+          "task_id": "g63-external",
+          "event_type": "start",
+          "timestamp": "2026-06-28T13:10:10Z",
+          "tokens": 0,
+          "duration_sec": 0.0,
+          "metadata": "{}"
+        },
+        {
+          "task_id": "g63-external",
+          "event_type": "llm_call",
+          "timestamp": "2026-06-28T13:10:10Z",
+          "tokens": 4559,
+          "duration_sec": 0.0,
+          "metadata": "{}"
+        },
+        {
+          "task_id": "g63-external",
+          "event_type": "bash_call",
+          "timestamp": "2026-06-28T13:10:10Z",
+          "tokens": 0,
+          "duration_sec": 5.2,
+          "metadata": "{}"
+        },
+        {
+          "task_id": "g63-external",
+          "event_type": "end",
+          "timestamp": "2026-06-28T13:10:10Z",
+          "tokens": 0,
+          "duration_sec": 0.0,
+          "metadata": "{}"
+        }
+      ],
+      "wall_clock_sec": 0.0,
+      "cost_usd": 0.0
+    },
+    {
+      "task_id": "g64-gnews",
+      "start_ts": "2026-06-28T13:10:10Z",
+      "end_ts": "2026-06-28T13:10:10Z",
+      "llm_calls": 1,
+      "llm_tokens": 2470,
+      "bash_calls": 1,
+      "bash_wall_sec": 25.0,
+      "events": [
+        {
+          "task_id": "g64-gnews",
+          "event_type": "start",
+          "timestamp": "2026-06-28T13:10:10Z",
+          "tokens": 0,
+          "duration_sec": 0.0,
+          "metadata": "{}"
+        },
+        {
+          "task_id": "g64-gnews",
+          "event_type": "llm_call",
+          "timestamp": "2026-06-28T13:10:10Z",
+          "tokens": 2470,
+          "duration_sec": 0.0,
+          "metadata": "{}"
+        },
+        {
+          "task_id": "g64-gnews",
+          "event_type": "bash_call",
+          "timestamp": "2026-06-28T13:10:10Z",
+          "tokens": 0,
+          "duration_sec": 25.0,
+          "metadata": "{}"
+        },
+        {
+          "task_id": "g64-gnews",
+          "event_type": "end",
+          "timestamp": "2026-06-28T13:10:10Z",
+          "tokens": 0,
+          "duration_sec": 0.0,
+          "metadata": "{}"
+        }
+      ],
+      "wall_clock_sec": 0.0,
+      "cost_usd": 0.0
+    }
+  ]
+}

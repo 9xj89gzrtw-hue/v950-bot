@@ -7,7 +7,7 @@
   },
   "z3_soundness": {
     "result": "UNSAT — formally PROVEN",
-    "time_sec": 0.004
+    "time_sec": 0.005
   },
   "paraphrase_invariance_test": {
     "synonym": {

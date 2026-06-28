@@ -10,7 +10,7 @@
     "available": true,
     "auto_rebuild_possible": true
   },
-  "load_time_sec": 27.2,
+  "load_time_sec": 27.7,
   "vocab_size": 3000000,
   "vector_dim": 300,
   "functionality": {

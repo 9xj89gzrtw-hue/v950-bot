@@ -13,55 +13,55 @@
   },
   "z3_hash_injectivity": {
     "result": "UNSAT — formally PROVEN: under injectivity axiom, no line with expected hash can omit required phrase",
-    "time_sec": 0.144
+    "time_sec": 0.146
   },
   "z3_unicode_attacks": [
     {
       "attack": "U+200B ZWSP",
       "result": "sat",
-      "time_sec": 0.682,
+      "time_sec": 0.697,
       "interpretation": "SAT — attack CAN coexist (hash check mandatory)"
     },
     {
       "attack": "U+200C ZWNJ",
       "result": "sat",
-      "time_sec": 2.043,
+      "time_sec": 2.085,
       "interpretation": "SAT — attack CAN coexist (hash check mandatory)"
     },
     {
       "attack": "U+00A0 NBSP",
       "result": "sat",
-      "time_sec": 0.237,
+      "time_sec": 0.238,
       "interpretation": "SAT — attack CAN coexist (hash check mandatory)"
     },
     {
       "attack": "U+FEFF BOM",
       "result": "sat",
-      "time_sec": 0.183,
+      "time_sec": 0.181,
       "interpretation": "SAT — attack CAN coexist (hash check mandatory)"
     },
     {
       "attack": "U+037E Greek question mark",
       "result": "sat",
-      "time_sec": 0.663,
+      "time_sec": 0.686,
       "interpretation": "SAT — attack CAN coexist (hash check mandatory)"
     },
     {
       "attack": "U+200D ZWJ",
       "result": "sat",
-      "time_sec": 0.202,
+      "time_sec": 0.208,
       "interpretation": "SAT — attack CAN coexist (hash check mandatory)"
     },
     {
       "attack": "U+2060 Word Joiner",
       "result": "sat",
-      "time_sec": 0.396,
+      "time_sec": 0.406,
       "interpretation": "SAT — attack CAN coexist (hash check mandatory)"
     },
     {
       "attack": "U+00AD Soft hyphen",
       "result": "sat",
-      "time_sec": 0.743,
+      "time_sec": 0.76,
       "interpretation": "SAT — attack CAN coexist (hash check mandatory)"
     }
   ]

@@ -1,12 +1,12 @@
 {
   "test": "G51-Z3-string-theory-optimized",
   "version": "v9.30",
-  "total_time_sec": 6.858,
+  "total_time_sec": 6.882,
   "per_phrase": [
     {
       "phrase": "с первой попытки",
       "result": "sat",
-      "time_sec": 0.083
+      "time_sec": 0.085
     },
     {
       "phrase": "никогда не врут",
@@ -21,7 +21,7 @@
     {
       "phrase": "решают задачи",
       "result": "sat",
-      "time_sec": 0.035
+      "time_sec": 0.036
     },
     {
       "phrase": "Создавать",
@@ -33,55 +33,55 @@
     {
       "attack": "U+200B ZWSP",
       "result": "sat",
-      "time_sec": 2.024,
+      "time_sec": 2.027,
       "interpretation": "SAT — hash check mandatory"
     },
     {
       "attack": "U+200C ZWNJ",
       "result": "sat",
-      "time_sec": 2.279,
+      "time_sec": 2.28,
       "interpretation": "SAT — hash check mandatory"
     },
     {
       "attack": "U+00A0 NBSP",
       "result": "sat",
-      "time_sec": 0.146,
+      "time_sec": 0.147,
       "interpretation": "SAT — hash check mandatory"
     },
     {
       "attack": "U+FEFF BOM",
       "result": "sat",
-      "time_sec": 0.91,
+      "time_sec": 0.916,
       "interpretation": "SAT — hash check mandatory"
     },
     {
       "attack": "U+037E Greek question mark",
       "result": "sat",
-      "time_sec": 0.209,
+      "time_sec": 0.21,
       "interpretation": "SAT — hash check mandatory"
     },
     {
       "attack": "U+200D ZWJ",
       "result": "sat",
-      "time_sec": 0.272,
+      "time_sec": 0.266,
       "interpretation": "SAT — hash check mandatory"
     },
     {
       "attack": "U+2060 Word Joiner",
       "result": "sat",
-      "time_sec": 0.554,
+      "time_sec": 0.566,
       "interpretation": "SAT — hash check mandatory"
     },
     {
       "attack": "U+00AD Soft hyphen",
       "result": "sat",
-      "time_sec": 0.158,
+      "time_sec": 0.16,
       "interpretation": "SAT — hash check mandatory"
     }
   ],
   "hash_injectivity": {
     "result": "UNSAT — formally PROVEN",
-    "time_sec": 0.098
+    "time_sec": 0.1
   },
   "concrete_checks": {
     "hash_pass": true,

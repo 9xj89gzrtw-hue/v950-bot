@@ -1,6 +1,38 @@
 # ERROR_LESSON_BOOK v9.34 (post-sandbox-reset restoration)
 
-## v9.35 NEW LESSONs (046-047)
+## v9.36 NEW LESSONs (048-050)
+
+### LESSON FASTTEXT-SUBWORD-MULTILINGUAL-048 (v9.36 NEW)
+- **Pattern:** v9.35 used separate word2vec models per language (Google News English, ruscorpora Russian). No single model for multilingual.
+- **Trigger:** multilingual prompt verification needing one model.
+- **Action:** v9.36 G67 — fasttext-wiki-news-subwords-300 (1M vocab, 300-dim):
+  1. Trained on Wikipedia 2017 + UMBC webbase + statmt.org news (multilingual)
+  2. Subword embeddings → can compute vectors for OOV words (rare words, misspellings)
+  3. 958MB .gz, loads in 60-120s
+  4. .kv cache is 1.2GB (smaller than Google News 3.6GB)
+  Honest limitation: gensim KeyedVectors doesn't expose subword vectors for OOV (would need fasttext model directly); 1M vocab is smaller than Google News 3M.
+
+### LESSON BOOTSTRAP-LAYER8-WATCHER-049 (v9.36 NEW)
+- **Pattern:** v9.35 bootstrap had 7 layers but didn't verify persistent watcher (G56).
+- **Trigger:** sandbox reset could kill watcher process; need to detect + resurrect.
+- **Action:** v9.36 Layer 8 — check heartbeat file + PID alive:
+  1. If heartbeat file exists and PID alive → OK
+  2. If heartbeat exists but PID dead → trigger resurrection (--check mode)
+  3. If no heartbeat → start watcher via setsid (best-effort, sandbox may kill)
+  Honest limitation: setsid may not survive in sandbox; --once mode is more reliable.
+
+### LESSON COST-DASHBOARD-HTML-CHARTJS-050 (v9.36 NEW)
+- **Pattern:** v9.30 G54 tracked cost/latency in evidence.db but no visualization.
+- **Trigger:** need human-readable view of token/cost/latency metrics.
+- **Action:** v9.36 G54 dashboard — HTML + Chart.js:
+  1. Reads cost_latency table from evidence.db
+  2. Aggregates per-task: llm_calls, llm_tokens, bash_calls, bash_wall_sec, wall_clock_sec
+  3. Generates 4 charts: tokens, wall-clock, calls comparison, bash wall time
+  4. Summary cards: total tasks, tokens, calls, cost
+  5. Per-task detail table
+  6. Output: /home/z/my-project/download/cost_dashboard.html
+  7. Uses Chart.js CDN (no install needed, but requires internet to view)
+  Honest limitation: Chart.js loaded from CDN; if offline, charts won't render (table still works).
 
 ### LESSON GNEWS-KV-CACHE-TOO-LARGE-046 (v9.35 NEW)
 - **Pattern:** Google News .kv cache is 3.6GB (.kv + .vectors.npy). Saving it exhausted disk in sandbox.
