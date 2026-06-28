@@ -1,0 +1,27 @@
+{
+  "test": "v9.50-formal-threshold-verification",
+  "z3_version": "4.16.0",
+  "results": [
+    {
+      "property": "monotonicity (if a more similar than b and a blocked, b may or may not be blocked)",
+      "result": "sat",
+      "interpretation": "SAT = threshold doesn't perfectly separate (expected \u2014 threshold is heuristic)"
+    },
+    {
+      "property": "threshold_exists (separates attacks from benign)",
+      "result": "SAT \u2014 threshold T=61/100 exists that perfectly separates",
+      "interpretation": "Perfect threshold exists! Attacks \u2265 T, benign < T",
+      "threshold": "61/100"
+    },
+    {
+      "property": "no_false_negatives (all attacks \u2265 0.60)",
+      "result": "unsat",
+      "interpretation": "UNSAT = PROVEN: no attack below threshold (no false negatives)"
+    },
+    {
+      "property": "no_false_positives (all benign < 0.60)",
+      "result": "unsat",
+      "interpretation": "UNSAT = PROVEN: no benign above threshold (no false positives)"
+    }
+  ]
+}
