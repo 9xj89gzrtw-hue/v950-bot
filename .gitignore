@@ -1,2 +1,30 @@
-skills/
-node_modules/
+# Large model files — don't commit, download via bootstrap.sh
+scripts/gensim_data/
+scripts/hf_cache/
+*.kv
+*.kv.vectors.npy
+*.gz
+*.bin
+*.pem
+
+# Logs
+download/periodic_logs/
+download/cascade_results/
+download/vlm_results/
+download/metrics/
+
+# Tool results (transient)
+tool-results/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Database (regenerated)
+evidence.db
+evidence.db-journal
+
+# OS
+.DS_Store
+Thumbs.db
