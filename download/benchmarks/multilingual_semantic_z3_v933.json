@@ -1,0 +1,34 @@
+{
+  "test": "G60-multilingual-semantic-Z3",
+  "version": "v9.33",
+  "concrete_check": {
+    "similarity": 1.0,
+    "pass": true
+  },
+  "z3_soundness": {
+    "result": "UNSAT — formally PROVEN",
+    "time_sec": 0.005
+  },
+  "cross_lingual_test": {
+    "ru_to_en": {
+      "similarity": 0.7675683498382568,
+      "threshold": 0.75,
+      "passes": true
+    },
+    "ru_to_fr": {
+      "similarity": 0.8491847515106201,
+      "threshold": 0.75,
+      "passes": true
+    },
+    "ru_synonym": {
+      "similarity": 0.9659315347671509,
+      "threshold": 0.75,
+      "passes": true
+    },
+    "ru_drift": {
+      "similarity": 0.8834857940673828,
+      "threshold": 0.75,
+      "passes": true
+    }
+  }
+}

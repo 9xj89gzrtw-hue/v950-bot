@@ -1,0 +1,18 @@
+{
+  "test": "G58-BERT-semantic-Z3",
+  "version": "v9.32",
+  "concrete_check": {
+    "similarity": 1.0000001192092896,
+    "pass": true
+  },
+  "z3_soundness": {
+    "result": "UNSAT — formally PROVEN",
+    "time_sec": 0.004
+  },
+  "semantic_attack_test": {
+    "synonym_sim": 0.9657009840011597,
+    "synonym_recognized": true,
+    "drift_sim": 0.9461686611175537,
+    "drift_caught": true
+  }
+}

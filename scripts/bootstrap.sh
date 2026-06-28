@@ -329,6 +329,68 @@ else
 fi
 
 # ============================================================================
+# Layer 7: BERT models (sentence-transformers auto-download)
+# ============================================================================
+log ""
+log "[Layer 7] BERT models (sentence-transformers)"
+
+export TRANSFORMERS_CACHE="$PROJECT_ROOT/scripts/hf_cache"
+export HF_HOME="$PROJECT_ROOT/scripts/hf_cache"
+mkdir -p "$TRANSFORMERS_CACHE"
+
+# Check if sentence-transformers is installed
+if ! python3 -c "import sentence_transformers" 2>/dev/null; then
+    log "  SKIP: sentence-transformers not installed (run Layer 1 first)"
+else
+    # Define BERT models to ensure are cached
+    BERT_MODELS=(
+        "sentence-transformers/all-MiniLM-L6-v2|80|G58 BERT semantic Z3 (general-purpose)"
+        "sentence-transformers/paraphrase-MiniLM-L6-v2|80|G61 paraphrase-tuned semantic Z3 (PAWS+MRPC+Quora)"
+        "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2|470|G60 multilingual semantic Z3 (50+ languages)"
+    )
+
+    for entry in "${BERT_MODELS[@]}"; do
+        IFS='|' read -r model_id size_mb purpose <<< "$entry"
+        # Check if model is cached (look for the model dir in hf_cache)
+        MODEL_DIR_NAME=$(echo "$model_id" | sed 's|/|--|g')
+        MODEL_CACHED=$(find "$TRANSFORMERS_CACHE" -maxdepth 3 -name "$MODEL_DIR_NAME" -type d 2>/dev/null | head -1)
+        
+        if [ -n "$MODEL_CACHED" ]; then
+            log "  OK: $model_id (~${size_mb}MB) — $purpose"
+        else
+            log "  MISSING: $model_id (~${size_mb}MB) — $purpose"
+            if [ "$CHECK_ONLY" = false ]; then
+                log "    downloading (auto-cache to $TRANSFORMERS_CACHE)..."
+                # Use timeout to prevent hanging; model download is ~10-30s per model
+                timeout 120 python3 -c "
+import os
+os.environ['TRANSFORMERS_CACHE'] = '$TRANSFORMERS_CACHE'
+os.environ['HF_HOME'] = '$HF_HOME'
+from sentence_transformers import SentenceTransformer
+import sys
+try:
+    m = SentenceTransformer('$model_id')
+    print(f'    OK: loaded, dim={m.get_sentence_embedding_dimension()}', file=sys.stderr)
+except Exception as e:
+    print(f'    FAIL: {e}', file=sys.stderr)
+    sys.exit(1)
+" 2>&1 | tail -3
+            fi
+        fi
+    done
+fi
+
+# Disk space check after BERT downloads
+log ""
+log "[Disk space check]"
+DISK_AVAIL=$(df /home/z 2>/dev/null | tail -1 | awk '{print $4}')
+DISK_AVAIL_MB=$((DISK_AVAIL / 1024))
+log "  available: ${DISK_AVAIL_MB}MB"
+if [ "$DISK_AVAIL_MB" -lt 500 ]; then
+    log "  WARN: low disk space (<500MB). BERT models may fail to cache."
+fi
+
+# ============================================================================
 # Final verification
 # ============================================================================
 log ""

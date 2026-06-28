@@ -1,0 +1,92 @@
+{
+  "test": "G51-Z3-string-theory-optimized",
+  "version": "v9.30",
+  "total_time_sec": 6.841,
+  "per_phrase": [
+    {
+      "phrase": "с первой попытки",
+      "result": "sat",
+      "time_sec": 0.079
+    },
+    {
+      "phrase": "никогда не врут",
+      "result": "sat",
+      "time_sec": 0.04
+    },
+    {
+      "phrase": "лучшие в мире промпты",
+      "result": "sat",
+      "time_sec": 0.013
+    },
+    {
+      "phrase": "решают задачи",
+      "result": "sat",
+      "time_sec": 0.035
+    },
+    {
+      "phrase": "Создавать",
+      "result": "sat",
+      "time_sec": 0.008
+    }
+  ],
+  "unicode_attacks": [
+    {
+      "attack": "U+200B ZWSP",
+      "result": "sat",
+      "time_sec": 2.059,
+      "interpretation": "SAT — hash check mandatory"
+    },
+    {
+      "attack": "U+200C ZWNJ",
+      "result": "sat",
+      "time_sec": 2.249,
+      "interpretation": "SAT — hash check mandatory"
+    },
+    {
+      "attack": "U+00A0 NBSP",
+      "result": "sat",
+      "time_sec": 0.146,
+      "interpretation": "SAT — hash check mandatory"
+    },
+    {
+      "attack": "U+FEFF BOM",
+      "result": "sat",
+      "time_sec": 0.912,
+      "interpretation": "SAT — hash check mandatory"
+    },
+    {
+      "attack": "U+037E Greek question mark",
+      "result": "sat",
+      "time_sec": 0.209,
+      "interpretation": "SAT — hash check mandatory"
+    },
+    {
+      "attack": "U+200D ZWJ",
+      "result": "sat",
+      "time_sec": 0.263,
+      "interpretation": "SAT — hash check mandatory"
+    },
+    {
+      "attack": "U+2060 Word Joiner",
+      "result": "sat",
+      "time_sec": 0.551,
+      "interpretation": "SAT — hash check mandatory"
+    },
+    {
+      "attack": "U+00AD Soft hyphen",
+      "result": "sat",
+      "time_sec": 0.157,
+      "interpretation": "SAT — hash check mandatory"
+    }
+  ],
+  "hash_injectivity": {
+    "result": "UNSAT — formally PROVEN",
+    "time_sec": 0.095
+  },
+  "concrete_checks": {
+    "hash_pass": true,
+    "actual_hash": "03ac49234eeb9000",
+    "unicode_pass": true,
+    "forbidden_found": []
+  }
+}

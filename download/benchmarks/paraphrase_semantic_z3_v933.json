@@ -1,0 +1,34 @@
+{
+  "test": "G61-paraphrase-tuned-semantic-Z3",
+  "version": "v9.33",
+  "concrete_check": {
+    "similarity": 1.0000001192092896,
+    "pass": true
+  },
+  "z3_soundness": {
+    "result": "UNSAT — formally PROVEN",
+    "time_sec": 0.004
+  },
+  "paraphrase_invariance_test": {
+    "synonym": {
+      "similarity": 0.9859214425086975,
+      "threshold": 0.9,
+      "passes": true
+    },
+    "paraphrase": {
+      "similarity": 0.9907519817352295,
+      "threshold": 0.9,
+      "passes": true
+    },
+    "drift": {
+      "similarity": 0.9902316331863403,
+      "threshold": 0.9,
+      "passes": true
+    },
+    "unrelated": {
+      "similarity": 0.029072847217321396,
+      "threshold": 0.9,
+      "passes": false
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "test": "G0-Z3-formal-verification",
+  "version": "v9.28",
+  "z3_version": "4.16.0",
+  "concrete_hash_check": {
+    "expected": "03ac49234eeb9000",
+    "actual": "03ac49234eeb9000",
+    "pass": true
+  },
+  "concrete_unicode_check": {
+    "pass": true,
+    "forbidden_chars_found": []
+  },
+  "z3_hash_injectivity": {
+    "result": "UNSAT — formally PROVEN: under injectivity axiom, no line with expected hash can omit required phrase",
+    "time_sec": 0.146
+  },
+  "z3_unicode_attacks": [
+    {
+      "attack": "U+200B ZWSP",
+      "result": "sat",
+      "time_sec": 0.678,
+      "interpretation": "SAT — attack CAN coexist (hash check mandatory)"
+    },
+    {
+      "attack": "U+200C ZWNJ",
+      "result": "sat",
+      "time_sec": 2.036,
+      "interpretation": "SAT — attack CAN coexist (hash check mandatory)"
+    },
+    {
+      "attack": "U+00A0 NBSP",
+      "result": "sat",
+      "time_sec": 0.231,
+      "interpretation": "SAT — attack CAN coexist (hash check mandatory)"
+    },
+    {
+      "attack": "U+FEFF BOM",
+      "result": "sat",
+      "time_sec": 0.18,
+      "interpretation": "SAT — attack CAN coexist (hash check mandatory)"
+    },
+    {
+      "attack": "U+037E Greek question mark",
+      "result": "sat",
+      "time_sec": 0.67,
+      "interpretation": "SAT — attack CAN coexist (hash check mandatory)"
+    },
+    {
+      "attack": "U+200D ZWJ",
+      "result": "sat",
+      "time_sec": 0.203,
+      "interpretation": "SAT — attack CAN coexist (hash check mandatory)"
+    },
+    {
+      "attack": "U+2060 Word Joiner",
+      "result": "sat",
+      "time_sec": 0.398,
+      "interpretation": "SAT — attack CAN coexist (hash check mandatory)"
+    },
+    {
+      "attack": "U+00AD Soft hyphen",
+      "result": "sat",
+      "time_sec": 0.753,
+      "interpretation": "SAT — attack CAN coexist (hash check mandatory)"
+    }
+  ]
+}
