@@ -1,0 +1,2 @@
+{"timestamp": "2026-06-28T15:19:08Z", "identity": "alice", "action": "run_gate", "resource": "g0_check", "decision": "allow", "policy": "p1", "request_hash": "1e20fca076ca286e"}
+{"timestamp": "2026-06-28T15:19:08Z", "identity": "bob", "action": "run_gate", "resource": "z3_verify", "decision": "deny", "policy": "p4", "request_hash": "a88742263ca6c2ea"}

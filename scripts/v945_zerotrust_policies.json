@@ -1,63 +1,46 @@
-[
-  {
-    "id": "P001",
-    "resource": "g0_check",
-    "allowed_roles": [
-      "admin",
-      "user",
-      "service"
-    ],
-    "min_trust_score": 0.5,
-    "description": "G0 check \u2014 anyone with basic trust"
-  },
-  {
-    "id": "P002",
-    "resource": "z3_verify",
-    "allowed_roles": [
-      "admin",
-      "service"
-    ],
-    "min_trust_score": 0.8,
-    "description": "Z3 formal verification \u2014 high trust required"
-  },
-  {
-    "id": "P003",
-    "resource": "bert_check_primary_goal",
-    "allowed_roles": [
-      "admin",
-      "service"
-    ],
-    "min_trust_score": 0.8,
-    "description": "BERT semantic check \u2014 high trust"
-  },
-  {
-    "id": "P004",
-    "resource": "bootstrap",
-    "allowed_roles": [
-      "admin"
-    ],
-    "min_trust_score": 1.0,
-    "description": "Bootstrap recovery \u2014 admin only"
-  },
-  {
-    "id": "P005",
-    "resource": "llm_chat",
-    "allowed_roles": [
-      "admin",
-      "user",
-      "service"
-    ],
-    "min_trust_score": 0.3,
-    "description": "LLM chat \u2014 low trust threshold"
-  },
-  {
-    "id": "P006",
-    "resource": "blockchain_add",
-    "allowed_roles": [
-      "admin",
-      "service"
-    ],
-    "min_trust_score": 0.9,
-    "description": "Add to blockchain \u2014 very high trust"
-  }
-]
+{
+  "policies": [
+    {
+      "id": "p1",
+      "subject": "alice",
+      "action": "*",
+      "resource": "*",
+      "decision": "allow"
+    },
+    {
+      "id": "p2",
+      "subject": "bob",
+      "action": "chat",
+      "resource": "*",
+      "decision": "allow"
+    },
+    {
+      "id": "p3",
+      "subject": "bob",
+      "action": "run_gate",
+      "resource": "g0_check",
+      "decision": "allow"
+    },
+    {
+      "id": "p4",
+      "subject": "bob",
+      "action": "run_gate",
+      "resource": "*",
+      "decision": "deny"
+    },
+    {
+      "id": "p5",
+      "subject": "*",
+      "action": "status",
+      "resource": "*",
+      "decision": "allow"
+    },
+    {
+      "id": "p6",
+      "subject": "*",
+      "action": "*",
+      "resource": "admin",
+      "decision": "deny"
+    }
+  ]
+}

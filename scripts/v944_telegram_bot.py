@@ -332,7 +332,6 @@ def start_bot():
                 payload = json.dumps({
                     "chat_id": from_chat_id,
                     "text": response[:4000],  # Telegram limit
-                    "parse_mode": "Markdown",
                 }).encode("utf-8")
                 send_req = urllib.request.Request(
                     send_url,
@@ -340,8 +339,11 @@ def start_bot():
                     headers={"Content-Type": "application/json"},
                     method="POST",
                 )
-                urllib.request.urlopen(send_req, timeout=10)
-                print(f"Sent: {response[:50]}...")
+                try:
+                    urllib.request.urlopen(send_req, timeout=10)
+                    print(f"Sent: {response[:50]}...")
+                except Exception as send_err:
+                    print(f"Send error: {send_err}")
         
         except Exception as e:
             print(f"Error: {e}")
