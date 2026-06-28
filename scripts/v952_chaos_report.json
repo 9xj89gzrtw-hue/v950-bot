@@ -1,0 +1,58 @@
+{
+  "timestamp": "2026-06-28T17:30:38Z",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "results": [
+    {
+      "name": "network-latency",
+      "description": "Add 200ms to all network calls",
+      "risk_level": "low",
+      "passed": true,
+      "elapsed_sec": 6.41,
+      "verify_result": {
+        "resilient": true,
+        "llm_responded": true
+      },
+      "timestamp": "2026-06-28T17:29:41Z"
+    },
+    {
+      "name": "dependency-failure",
+      "description": "Kill z-ai, verify Pollinations fallback",
+      "risk_level": "medium",
+      "passed": true,
+      "elapsed_sec": 6.16,
+      "verify_result": {
+        "resilient": true,
+        "fallback_used": false,
+        "model": "glm-4-plus"
+      },
+      "timestamp": "2026-06-28T17:29:57Z"
+    },
+    {
+      "name": "disk-fill",
+      "description": "Fill disk to 95%, verify graceful degradation",
+      "risk_level": "medium",
+      "passed": true,
+      "elapsed_sec": 5.04,
+      "verify_result": {
+        "resilient": true,
+        "disk_status": "c-6a40f8ff-148bea08-c35dd7490df2-rootfs  9.9G  8.1G  1.3G  87% /"
+      },
+      "timestamp": "2026-06-28T17:30:12Z"
+    },
+    {
+      "name": "cache-exhaustion",
+      "description": "Clear LLM cache, verify fresh calls work",
+      "risk_level": "low",
+      "passed": true,
+      "elapsed_sec": 6.47,
+      "verify_result": {
+        "resilient": true,
+        "was_cached": false,
+        "fresh_call": true
+      },
+      "timestamp": "2026-06-28T17:30:28Z"
+    }
+  ]
+}

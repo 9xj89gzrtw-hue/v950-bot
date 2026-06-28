@@ -40,6 +40,15 @@ def log(msg):
 
 
 def load_config():
+    """Load config from file OR environment variables (for cloud deploy)."""
+    # Check environment variables first (Render/K8s/Docker)
+    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    
+    if bot_token and chat_id:
+        return {"bot_token": bot_token, "chat_id": chat_id}
+    
+    # Fallback to config file
     return json.loads(Path(CONFIG_FILE).read_text())
 
 

@@ -1,0 +1,133 @@
+# v9.52 Multi-Region Kubernetes Federation
+# ===========================================
+# Deploy bot across multiple regions for HA + latency optimization.
+#
+# Regions:
+# - EU (Frankfurt): primary
+# - US (Virginia): secondary
+# - Asia (Singapore): tertiary
+#
+# Only ONE region active at a time (Telegram limitation: single consumer).
+# Failover: if primary down → promote secondary.
+
+---
+# KubeFedConfig (requires KubeFederation v2)
+apiVersion: core.kubefed.io/v1beta1
+kind: KubeFedConfig
+metadata:
+  name: kubefed
+  namespace: kube-federation-system
+spec:
+  scope: Cluster
+  controller:
+    sync: true
+  federation:
+    enable: true
+
+---
+# FederatedDeployment
+apiVersion: apps.kubefed.io/v1beta1
+kind: FederatedDeployment
+metadata:
+  name: telegram-bot
+  namespace: v950-bot
+spec:
+  template:
+    metadata:
+      labels:
+        app: telegram-bot
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: telegram-bot
+      template:
+        metadata:
+          labels:
+            app: telegram-bot
+        spec:
+          containers:
+            - name: bot
+              image: ghcr.io/YOUR_USERNAME/v950-bot:latest
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "1Gi"
+                  cpu: "500m"
+              env:
+                - name: TELEGRAM_BOT_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: telegram-secrets
+                      key: bot-token
+                - name: TELEGRAM_CHAT_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: telegram-secrets
+                      key: chat-id
+  placement:
+    clusters:
+      - name: eu-frankfurt
+      - name: us-virginia
+      - name: asia-singapore
+  overrides:
+    # Only EU runs active (replicas=1), others standby (replicas=0)
+    - clusterName: eu-frankfurt
+      clusterOverrides:
+        - path: /spec/replicas
+          value: 1
+    - clusterName: us-virginia
+      clusterOverrides:
+        - path: /spec/replicas
+          value: 0  # standby
+    - clusterName: asia-singapore
+      clusterOverrides:
+        - path: /spec/replicas
+          value: 0  # standby
+
+---
+# FederatedSecret (same token across regions)
+apiVersion: types.kubefed.io/v1beta1
+kind: FederatedSecret
+metadata:
+  name: telegram-secrets
+  namespace: v950-bot
+spec:
+  template:
+    metadata:
+      name: telegram-secrets
+    data:
+      bot-token: <base64-encoded-token>
+      chat-id: <base64-encoded-chat-id>
+  placement:
+    clusters:
+      - name: eu-frankfurt
+      - name: us-virginia
+      - name: asia-singapore
+
+---
+# Failover controller (promotes standby region if primary down)
+# Uses Kubernetes Federation's ReplicaSchedulingPreference
+apiVersion: scheduling.kubefed.io/v1alpha1
+kind: ReplicaSchedulingPreference
+metadata:
+  name: telegram-bot
+  namespace: v950-bot
+spec:
+  targetKind: FederatedDeployment
+  totalReplicas: 1
+  clusters:
+    eu-frankfurt:
+      minReplicas: 0
+      maxReplicas: 1
+      weight: 100  # primary
+    us-virginia:
+      minReplicas: 0
+      maxReplicas: 1
+      weight: 50  # failover
+    asia-singapore:
+      minReplicas: 0
+      maxReplicas: 1
+      weight: 25  # tertiary failover
