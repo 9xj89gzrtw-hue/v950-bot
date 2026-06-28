@@ -212,6 +212,82 @@ def cmd_health(args):
     }
 
 
+def cmd_process_telegram(args):
+    """Process pending Telegram messages (one-shot, non-blocking)."""
+    import json
+    import os
+    import subprocess
+    import urllib.request
+    from pathlib import Path
+    
+    config_path = "/home/z/my-project/scripts/v944_telegram_config.json"
+    state_path = "/home/z/my-project/scripts/v948_pullbot_state.json"
+    
+    if not os.path.exists(config_path):
+        return {"processed": 0, "error": "no telegram config"}
+    
+    config = json.loads(Path(config_path).read_text())
+    token = config.get("bot_token")
+    chat_id = str(config.get("chat_id", ""))
+    
+    if not token or not chat_id:
+        return {"processed": 0, "error": "missing token or chat_id"}
+    
+    # Load state
+    state = {"last_update_id": 0}
+    if os.path.exists(state_path):
+        try:
+            state = json.loads(Path(state_path).read_text())
+        except:
+            pass
+    
+    offset = state.get("last_update_id", 0) + 1
+    
+    # Get updates (short timeout)
+    url = f"https://api.telegram.org/bot{token}/getUpdates?offset={offset}&timeout=1"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    try:
+        resp = urllib.request.urlopen(req, timeout=10)
+        data = json.loads(resp.read())
+        updates = data.get("result", []) if data.get("ok") else []
+    except Exception as e:
+        return {"processed": 0, "error": str(e)}
+    
+    if not updates:
+        return {"processed": 0}
+    
+    # Import command handlers from v948_pullbot
+    sys.path.insert(0, "/home/z/my-project/scripts")
+    try:
+        from v948_pullbot import handle_message, tg_send
+    except ImportError:
+        return {"processed": 0, "error": "cannot import v948_pullbot"}
+    
+    processed = 0
+    for update in updates:
+        update_id = update.get("update_id", 0)
+        state["last_update_id"] = max(state.get("last_update_id", 0), update_id)
+        
+        message = update.get("message", {})
+        text = message.get("text", "")
+        from_chat_id = str(message.get("chat", {}).get("id", ""))
+        
+        if from_chat_id != chat_id or not text:
+            continue
+        
+        # Handle (never raises)
+        response = handle_message(text, config)
+        
+        # Send reply
+        tg_send(token, from_chat_id, response)
+        processed += 1
+    
+    # Save state
+    Path(state_path).write_text(json.dumps(state))
+    
+    return {"processed": processed, "last_update_id": state["last_update_id"]}
+
+
 def cmd_llm_chat(args):
     """Unified LLM chat with cache + retry + fallback (v9.38)."""
     if not args:
@@ -239,6 +315,7 @@ COMMANDS = {
     "bert_check_primary_goal": cmd_bert_check_primary_goal,
     "w2v_sim": cmd_w2v_sim,
     "health": cmd_health,
+    "process_telegram": cmd_process_telegram,
     "llm_chat": cmd_llm_chat,
     "llm_cache_stats": cmd_llm_cache_stats,
 }
@@ -271,7 +348,17 @@ def run_daemon():
     log(f"daemon listening on {SOCKET_PATH}, PID={os.getpid()}")
     
     _SHUTDOWN = False
+    _last_tg_check = 0
     while not _SHUTDOWN:
+        # Auto-process Telegram messages every 15s
+        now = time.time()
+        if now - _last_tg_check > 15:
+            _last_tg_check = now
+            try:
+                cmd_process_telegram([])
+            except Exception as e:
+                pass  # silent — don't crash daemon on TG errors
+        
         try:
             conn, _ = server.accept()
         except socket.timeout:
