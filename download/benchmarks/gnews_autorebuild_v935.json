@@ -1,0 +1,22 @@
+{
+  "test": "G65-google-news-auto-rebuild",
+  "version": "v9.35",
+  "availability": {
+    "has_kv_cache": false,
+    "has_gz_complete": true,
+    "kv_path": "/home/z/my-project/scripts/gensim_data/word2vec-google-news-300.kv",
+    "gz_path": "/home/z/my-project/scripts/gensim_data/word2vec-google-news-300/word2vec-google-news-300.gz",
+    "gz_size_bytes": 1743563840,
+    "available": true,
+    "auto_rebuild_possible": true
+  },
+  "load_time_sec": 27.2,
+  "vocab_size": 3000000,
+  "vector_dim": 300,
+  "functionality": {
+    "sim_king_queen": 0.6511,
+    "sim_king_banana": 0.1365,
+    "sim_king_crown": 0.3193,
+    "functional": true
+  }
+}

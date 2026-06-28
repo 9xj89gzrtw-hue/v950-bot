@@ -1,6 +1,27 @@
 # ERROR_LESSON_BOOK v9.34 (post-sandbox-reset restoration)
 
-## v9.34 NEW LESSONs (044-045)
+## v9.35 NEW LESSONs (046-047)
+
+### LESSON GNEWS-KV-CACHE-TOO-LARGE-046 (v9.35 NEW)
+- **Pattern:** Google News .kv cache is 3.6GB (.kv + .vectors.npy). Saving it exhausted disk in sandbox.
+- **Trigger:** G65 auto-rebuild attempts .kv.save() when .gz loaded but .kv missing.
+- **Action:** v9.35 G65 — disk-aware caching:
+  1. Check `shutil.disk_usage().free` before saving .kv
+  2. If free < 5GB → skip .kv cache, load from .gz each time (~25s)
+  3. If free ≥ 5GB → save .kv for fast reload (~1s)
+  Trade-off: 25s load time vs 3.6GB disk space.
+  Honest limitation: every G63/G64 run pays 25s load tax if disk constrained.
+
+### LESSON RUSSIAN-WORD2VEC-POS-TAGS-047 (v9.35 NEW)
+- **Pattern:** word2vec-ruscorpora-300 uses POS-tagged vocab format ("король_NOUN", not "король").
+  Direct lookup of bare Russian words returns "NOT in vocab".
+- **Trigger:** any Russian word2vec judge using ruscorpora-300.
+- **Action:** v9.35 G66 — POS-tag aware tokenization:
+  1. For each Russian word, try 11 POS variants: word_NOUN, word_VERB, word_ADJ, word_ADV, word_DET, word_NUM, word_PREP, word_CONJ, word_PRON, word_PART, word_INTJ
+  2. Use first match (most common POS)
+  3. If no variant matches → OOV
+  This adds ~10x lookup cost per word but enables 184K Russian vocab coverage.
+  Honest limitation: ruscorpora has 184K vocab (vs Google News 3M English); trained on 250M Russian words (vs 100B English).
 
 ### LESSON SANDBOX-RESET-DATA-LOSS-044 (v9.34 NEW — CRITICAL)
 - **Pattern:** Sandbox environment resets between sessions, losing all files outside persistent mounts. Git history reset to initial commit. Cached models (BERT, GloVe) deleted. Scripts lost.

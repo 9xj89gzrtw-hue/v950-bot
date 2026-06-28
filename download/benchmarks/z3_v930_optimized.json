@@ -1,17 +1,17 @@
 {
   "test": "G51-Z3-string-theory-optimized",
   "version": "v9.30",
-  "total_time_sec": 6.841,
+  "total_time_sec": 6.858,
   "per_phrase": [
     {
       "phrase": "с первой попытки",
       "result": "sat",
-      "time_sec": 0.079
+      "time_sec": 0.083
     },
     {
       "phrase": "никогда не врут",
       "result": "sat",
-      "time_sec": 0.04
+      "time_sec": 0.042
     },
     {
       "phrase": "лучшие в мире промпты",
@@ -33,13 +33,13 @@
     {
       "attack": "U+200B ZWSP",
       "result": "sat",
-      "time_sec": 2.059,
+      "time_sec": 2.024,
       "interpretation": "SAT — hash check mandatory"
     },
     {
       "attack": "U+200C ZWNJ",
       "result": "sat",
-      "time_sec": 2.249,
+      "time_sec": 2.279,
       "interpretation": "SAT — hash check mandatory"
     },
     {
@@ -51,7 +51,7 @@
     {
       "attack": "U+FEFF BOM",
       "result": "sat",
-      "time_sec": 0.912,
+      "time_sec": 0.91,
       "interpretation": "SAT — hash check mandatory"
     },
     {
@@ -63,25 +63,25 @@
     {
       "attack": "U+200D ZWJ",
       "result": "sat",
-      "time_sec": 0.263,
+      "time_sec": 0.272,
       "interpretation": "SAT — hash check mandatory"
     },
     {
       "attack": "U+2060 Word Joiner",
       "result": "sat",
-      "time_sec": 0.551,
+      "time_sec": 0.554,
       "interpretation": "SAT — hash check mandatory"
     },
     {
       "attack": "U+00AD Soft hyphen",
       "result": "sat",
-      "time_sec": 0.157,
+      "time_sec": 0.158,
       "interpretation": "SAT — hash check mandatory"
     }
   ],
   "hash_injectivity": {
     "result": "UNSAT — formally PROVEN",
-    "time_sec": 0.095
+    "time_sec": 0.098
   },
   "concrete_checks": {
     "hash_pass": true,

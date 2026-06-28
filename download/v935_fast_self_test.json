@@ -1,0 +1,10 @@
+{
+  "test": "v9.35_fast_self_test",
+  "timestamp": "2026-06-28T12:24:28Z",
+  "pass_count": 10,
+  "fail_count": 0,
+  "total": 10,
+  "pass_rate_pct": 100.0,
+  "all_pass": true,
+  "note": "LLM-based gates (G63, G64, G66) not included — run individually"
+}

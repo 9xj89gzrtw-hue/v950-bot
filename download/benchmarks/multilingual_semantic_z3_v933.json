@@ -7,7 +7,7 @@
   },
   "z3_soundness": {
     "result": "UNSAT — formally PROVEN",
-    "time_sec": 0.005
+    "time_sec": 0.004
   },
   "cross_lingual_test": {
     "ru_to_en": {
