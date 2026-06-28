@@ -1,5 +1,1 @@
-# v9.56 Telegram Bot — Python requirements (Render.com)
-# Minimal: only what the bot needs to run
-
-# Core (no heavy ML deps for Render free tier)
 z3-solver>=4.16.0
