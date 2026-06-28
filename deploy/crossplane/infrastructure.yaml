@@ -1,0 +1,153 @@
+# v9.53 Crossplane — K8s-Native Infrastructure Control
+# ========================================================
+# Crossplane: manage cloud resources via Kubernetes CRDs.
+# Instead of Terraform, use kubectl to create AWS resources.
+#
+# Install Crossplane:
+#   kubectl create namespace crossplane-system
+#   helm install crossplane crossplane-stable/crossplane --namespace crossplane-system
+#   kubectl apply -f crossplane/
+
+---
+# ProviderConfig: AWS credentials
+apiVersion: aws.crossplane.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: aws-default
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane-system
+      name: aws-creds
+      key: creds
+
+---
+# S3 Bucket for bot state
+apiVersion: s3.aws.crossplane.io/v1beta1
+kind: Bucket
+metadata:
+  name: v950-bot-state
+spec:
+  forProvider:
+    locationConstraint: eu-west-1
+    versioning:
+      enabled: true
+  providerConfigRef:
+    name: aws-default
+
+---
+# IAM Role for bot service account (IRSA)
+apiVersion: iam.aws.crossplane.io/v1beta1
+kind: Role
+metadata:
+  name: v950-bot-role
+spec:
+  forProvider:
+    assumeRolePolicyDocument: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "eks.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      }
+  providerConfigRef:
+    name: aws-default
+
+---
+# CloudWatch Log Group
+apiVersion: logs.aws.crossplane.io/v1alpha1
+kind: LogGroup
+metadata:
+  name: v950-bot-logs
+spec:
+  forProvider:
+    region: eu-west-1
+    retentionInDays: 30
+  providerConfigRef:
+    name: aws-default
+
+---
+# SNS Topic for alerts
+apiVersion: sns.aws.crossplane.io/v1beta1
+kind: Topic
+metadata:
+  name: v950-alerts
+spec:
+  forProvider:
+    region: eu-west-1
+  providerConfigRef:
+    name: aws-default
+
+---
+# Composition: define reusable infrastructure templates
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: v950-bot-infrastructure
+  labels:
+    crossplane.io/xrd: v950bots.infrastructure.v950.io
+spec:
+  writeConnectionSecretsToNamespace: crossplane-system
+  resources:
+    - name: bucket
+      base:
+        apiVersion: s3.aws.crossplane.io/v1beta1
+        kind: Bucket
+        spec:
+          forProvider:
+            locationConstraint: eu-west-1
+      patches:
+        - fromFieldPath: "spec.region"
+          toFieldPath: "spec.forProvider.locationConstraint"
+    
+    - name: loggroup
+      base:
+        apiVersion: logs.aws.crossplane.io/v1alpha1
+        kind: LogGroup
+        spec:
+          forProvider:
+            region: eu-west-1
+            retentionInDays: 30
+    
+    - name: snstopic
+      base:
+        apiVersion: sns.aws.crossplane.io/v1beta1
+        kind: Topic
+        spec:
+          forProvider:
+            region: eu-west-1
+
+---
+# CompositeResourceDefinition: define the API
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: v950bots.infrastructure.v950.io
+spec:
+  group: infrastructure.v950.io
+  names:
+    kind: V950Bot
+    plural: v950bots
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                region:
+                  type: string
+                  default: "eu-west-1"
+              required:
+                - region

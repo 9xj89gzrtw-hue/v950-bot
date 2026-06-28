@@ -1,0 +1,87 @@
+{
+  "timestamp": "2026-06-28T17:46:05Z",
+  "duration_sec": 5,
+  "results": {
+    "syscalls": {
+      "error": "no bot process found",
+      "pids": []
+    },
+    "network": {
+      "duration_sec": 5,
+      "active_connections": 6,
+      "connections": [
+        {
+          "local": "21.0.9.248:19006",
+          "remote": "21.0.0.1:50546",
+          "state": "ESTAB"
+        },
+        {
+          "local": "127.0.0.1:12600",
+          "remote": "127.0.0.1:39970",
+          "state": "ESTAB"
+        },
+        {
+          "local": "127.0.0.1:39970",
+          "remote": "127.0.0.1:12600",
+          "state": "ESTAB"
+        },
+        {
+          "local": "21.0.9.248:19006",
+          "remote": "21.0.0.1:50538",
+          "state": "ESTAB"
+        },
+        {
+          "local": "21.0.9.248:19005",
+          "remote": "21.0.0.1:49996",
+          "state": "ESTAB"
+        },
+        {
+          "local": "[::ffff:21.0.9.248]:81",
+          "remote": "[::ffff:21.0.0.1]:48330",
+          "state": "ESTAB"
+        }
+      ],
+      "unique_endpoints": [
+        "[::ffff:21.0.0.1]",
+        "21.0.0.1",
+        "127.0.0.1"
+      ],
+      "whitelisted": false
+    },
+    "files": {
+      "duration_sec": 5,
+      "total_files_open": 0,
+      "categories": {
+        "app_files": 0,
+        "system_files": 0,
+        "temp_files": 0,
+        "other": 0
+      },
+      "suspicious_access": [],
+      "all_files": []
+    },
+    "latency": {
+      "duration_sec": 5,
+      "latencies_ms": {
+        "daemon_health": {
+          "count": 5,
+          "p50_ms": 65.52,
+          "p99_ms": 65.91,
+          "avg_ms": 65.18
+        },
+        "file_read": {
+          "count": 0,
+          "p50_ms": 0,
+          "p99_ms": 0,
+          "avg_ms": 0
+        },
+        "network_dns": {
+          "count": 5,
+          "p50_ms": 28.31,
+          "p99_ms": 37.63,
+          "avg_ms": 30.18
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,72 @@
+# v9.53 Falco — Runtime Security Rules
+# ========================================
+# Detect suspicious runtime behavior in containers.
+# Falco taps into kernel syscalls (eBPF) → real-time alerts.
+#
+# Install Falco:
+#   helm install falco falcosecurity/falco --namespace falco
+#   kubectl apply -f falco/
+
+---
+# Custom Falco rules for v9.50 bot
+- macro: v950_bot_process
+  condition: container.name contains "telegram-bot"
+
+# Rule 1: Detect reverse shell (bot should never open shell)
+- rule: v950 Reverse Shell Detected
+  desc: Detect reverse shell from bot container
+  condition: v950_bot_process and (evt.type in (execve, execveat) and proc.name in (sh, bash, zsh, nc, ncat, socat))
+  output: "REVERSE SHELL from v950 bot (user=%user.name container=%container.name cmd=%proc.args)"
+  priority: CRITICAL
+  tags: [v950, security, container]
+
+# Rule 2: Detect file read outside allowed paths
+- rule: v950 Suspicious File Read
+  desc: Bot reading files outside /app or /tmp
+  condition: v950_bot_process and open_read and not fd.name startswith /app and not fd.name startswith /tmp and not fd.name startswith /proc and not fd.name startswith /etc
+  output: "SUSPICIOUS READ from v950 bot (file=%fd.name container=%container.name user=%user.name)"
+  priority: WARNING
+  tags: [v950, security, filesystem]
+
+# Rule 3: Detect network connection to non-whitelisted hosts
+- rule: v950 Unauthorized Network Connection
+  desc: Bot connecting to non-whitelisted host
+  condition: v950_bot_process and evt.type=connect and not fd.sip.name in (api.telegram.org, text.pollinations.ai, en.wikipedia.org, api.duckduckgo.com)
+  output: "UNAUTHORIZED NETWORK from v950 bot (dest=%fd.sip.name container=%container.name proc=%proc.name)"
+  priority: WARNING
+  tags: [v950, security, network]
+
+# Rule 4: Detect privilege escalation
+- rule: v950 Privilege Escalation Attempt
+  desc: Bot attempting to escalate privileges
+  condition: v950_bot_process and (setuid or setgid or capset) and not user.root
+  output: "PRIVILEGE ESCALATION from v950 bot (user=%user.name proc=%proc.name cmd=%proc.args)"
+  priority: CRITICAL
+  tags: [v950, security, privilege]
+
+# Rule 5: Detect cryptocurrency mining
+- rule: v950 Crypto Mining Detected
+  desc: Bot process looks like crypto miner
+  condition: v950_bot_process and (proc.name in (xmrig, minerd, cpuminer) or proc.cmdline contains "stratum" or proc.cmdline contains "pool.")
+  output: "CRYPTO MINING in v950 bot (proc=%proc.name cmd=%proc.cmdline container=%container.name)"
+  priority: CRITICAL
+  tags: [v950, security, mining]
+
+# Rule 6: Detect secret exfiltration
+- rule: v950 Secret Exfiltration
+  desc: Bot reading secret files and sending network data
+  condition: v950_bot_process and open_read and fd.name contains "secret" and evt.type=connect
+  output: "SECRET EXFIL from v950 bot (file=%fd.name dest=%fd.sip.name container=%container.name)"
+  priority: CRITICAL
+  tags: [v950, security, exfiltration]
+
+# Rule 7: Detect unexpected process execution
+- list: v950_allowed_processes
+  items: [python3, python, npx, node, curl, sh, cat, ls, grep]
+
+- rule: v950 Unexpected Process
+  desc: Bot running process not in whitelist
+  condition: v950_bot_process and evt.type=execve and not proc.name in (v950_allowed_processes)
+  output: "UNEXPECTED PROCESS in v950 bot (proc=%proc.name cmd=%proc.args container=%container.name)"
+  priority: WARNING
+  tags: [v950, security, process]
