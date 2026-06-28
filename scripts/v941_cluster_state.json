@@ -1,0 +1,14 @@
+{
+  "master": {
+    "alive": true,
+    "socket": "/home/z/my-project/scripts/v937_daemon.sock"
+  },
+  "workers": [],
+  "worker_count": 0,
+  "timestamp": 1782657023.447355,
+  "iso_timestamp": "2026-06-28T14:30:23Z",
+  "restart_count": 0,
+  "total_requests_handled": 0,
+  "first_started": "2026-06-28T14:30:23Z",
+  "requests_this_session": 0
+}

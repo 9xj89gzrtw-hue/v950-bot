@@ -1,0 +1,187 @@
+{
+  "apiVersion": 1,
+  "groups": [
+    {
+      "name": "v9.41-meta-prompt-alerts",
+      "interval": "30s",
+      "rules": [
+        {
+          "name": "DaemonDown",
+          "condition": "A",
+          "annotations": {
+            "summary": "Daemon is down",
+            "description": "v9.39 daemon uptime is 0 — daemon not running"
+          },
+          "labels": {"severity": "critical"},
+          "data": [
+            {
+              "refId": "A",
+              "queryType": "",
+              "relativeTimeRange": {"from": 300, "to": 0},
+              "datasourceUid": "prometheus",
+              "model": {
+                "expr": "v939_daemon_uptime_seconds == 0",
+                "intervalMs": 1000,
+                "maxDataPoints": 43200
+              }
+            }
+          ]
+        },
+        {
+          "name": "HighGateFailureRate",
+          "condition": "A",
+          "annotations": {
+            "summary": "Gate failure rate > 20%",
+            "description": "More than 20% of gate executions are failing"
+          },
+          "labels": {"severity": "warning"},
+          "data": [
+            {
+              "refId": "A",
+              "queryType": "",
+              "relativeTimeRange": {"from": 300, "to": 0},
+              "datasourceUid": "prometheus",
+              "model": {
+                "expr": "sum(v939_gate_executions_total{status=\"fail\"}) / sum(v939_gate_executions_total) * 100 > 20",
+                "intervalMs": 1000,
+                "maxDataPoints": 43200
+              }
+            }
+          ]
+        },
+        {
+          "name": "LowCacheHitRate",
+          "condition": "A",
+          "annotations": {
+            "summary": "Cache hit rate < 30%",
+            "description": "LLM cache is not being effective — too many fresh calls"
+          },
+          "labels": {"severity": "warning"},
+          "data": [
+            {
+              "refId": "A",
+              "queryType": "",
+              "relativeTimeRange": {"from": 600, "to": 0},
+              "datasourceUid": "prometheus",
+              "model": {
+                "expr": "v939_cache_total{type=\"hit\"} / (v939_cache_total{type=\"hit\"} + v939_cache_total{type=\"miss\"} + 1) * 100 < 30",
+                "intervalMs": 1000,
+                "maxDataPoints": 43200
+              }
+            }
+          ]
+        },
+        {
+          "name": "LLMProviderDown",
+          "condition": "A",
+          "annotations": {
+            "summary": "All LLM providers failing",
+            "description": "Both z-ai and Pollinations are returning errors"
+          },
+          "labels": {"severity": "critical"},
+          "data": [
+            {
+              "refId": "A",
+              "queryType": "",
+              "relativeTimeRange": {"from": 300, "to": 0},
+              "datasourceUid": "prometheus",
+              "model": {
+                "expr": "sum(v939_llm_calls_total{status=\"fail\"}) > 10 AND sum(v939_llm_calls_total{status=\"success\"}) == 0",
+                "intervalMs": 1000,
+                "maxDataPoints": 43200
+              }
+            }
+          ]
+        },
+        {
+          "name": "HighLLMLatency",
+          "condition": "A",
+          "annotations": {
+            "summary": "LLM avg latency > 10s",
+            "description": "LLM responses are taking too long — consider scaling workers"
+          },
+          "labels": {"severity": "warning"},
+          "data": [
+            {
+              "refId": "A",
+              "queryType": "",
+              "relativeTimeRange": {"from": 300, "to": 0},
+              "datasourceUid": "prometheus",
+              "model": {
+                "expr": "v939_llm_duration_seconds{quantile=\"avg\"} > 10",
+                "intervalMs": 1000,
+                "maxDataPoints": 43200
+              }
+            }
+          ]
+        },
+        {
+          "name": "WorkersAtMax",
+          "condition": "A",
+          "annotations": {
+            "summary": "Cluster at max workers",
+            "description": "Auto-scaler has reached MAX_WORKERS — may need manual intervention"
+          },
+          "labels": {"severity": "info"},
+          "data": [
+            {
+              "refId": "A",
+              "queryType": "",
+              "relativeTimeRange": {"from": 300, "to": 0},
+              "datasourceUid": "prometheus",
+              "model": {
+                "expr": "v939_cluster_workers_active >= 5",
+                "intervalMs": 1000,
+                "maxDataPoints": 43200
+              }
+            }
+          ]
+        },
+        {
+          "name": "Z3ProofFailed",
+          "condition": "A",
+          "annotations": {
+            "summary": "Z3 formal verification FAILED",
+            "description": "PRIMARY_GOAL hash-injectivity proof is no longer UNSAT — CRITICAL security issue"
+          },
+          "labels": {"severity": "critical"},
+          "data": [
+            {
+              "refId": "A",
+              "queryType": "",
+              "relativeTimeRange": {"from": 300, "to": 0},
+              "datasourceUid": "prometheus",
+              "model": {
+                "expr": "v939_gate_executions_total{gate=\"z3_verify\",status=\"fail\"} > 0",
+                "intervalMs": 1000,
+                "maxDataPoints": 43200
+              }
+            }
+          ]
+        },
+        {
+          "name": "BERTModelMissing",
+          "condition": "A",
+          "annotations": {
+            "summary": "BERT model not loading",
+            "description": "BERT semantic check is failing — model may have been deleted"
+          },
+          "labels": {"severity": "critical"},
+          "data": [
+            {
+              "refId": "A",
+              "queryType": "",
+              "relativeTimeRange": {"from": 300, "to": 0},
+              "datasourceUid": "prometheus",
+              "model": {
+                "expr": "v939_gate_executions_total{gate=\"bert_check_primary_goal\",status=\"fail\"} > 0",
+                "intervalMs": 1000,
+                "maxDataPoints": 43200
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
