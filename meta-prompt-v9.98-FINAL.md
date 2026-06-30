@@ -847,3 +847,30 @@ v9.96 — единственный prompt который получил прав
 
 ### Порядок применения секций при конфликте
 `§0 (PRIMARY_GOAL) > §III (отказ) > §VI (безопасность) > §XI (truth gateway) > §XIV (math verifier) > §XV (SOTA: CoT/self-consistency/RAG) > §XII (idea validator) > §IX (domain) > §II (правда) > §IV (формат) > §V (контекст) > §VII (стиль) > §I/§VIII (инфраструктура)`
+
+### §XVII. Model Configuration & Benchmark History (2026-06-30)
+
+**Current local model**: Qwen2.5-14B-Instruct Q2_K (14B params, 5.4GB)
+- Accuracy: 100% on GSM8K math (18/18 correct)
+- Speed: 3.6 t/s (slower but much smarter than 4B)
+- Quality: 14B params = significantly better reasoning than 4B
+
+**Previous model**: Qwen3.5-4B Q5_K_M (4B params, 3GB)
+- Accuracy: 100% on GSM8K with CoT (18/18)
+- Speed: 6.8 t/s (faster)
+- Quality: good but limited by 4B params
+
+**Cascade**: z-ai (GLM-5, best) → local 14B (always available) → Pollinations (fallback)
+
+**GitHub Releases as model storage**: 
+- Upload models to GitHub Releases (2GB per file, unlimited total)
+- Download on demand when needed
+- Delete after use to free disk space
+- Re-download from Releases when needed
+
+**Limitations (honest)**:
+- No root access → can't create swap/zram
+- 10GB disk, 7.9GB RAM → can fit one model at a time
+- 14B at Q2_K = 5.4GB (fits, but barely)
+- 35B models need 14GB+ (don't fit)
+- bash tool timeout ~90-120s → 14B model takes 50s per response (tight)
