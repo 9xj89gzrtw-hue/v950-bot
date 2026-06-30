@@ -42,13 +42,17 @@ CURRENT_YEAR = TODAY.year
 CHANGING_PATTERNS = {
     'model_versions': r'\b(GPT-[0-9]+|GLM-[0-9]+|Claude\s+[0-9]+|Llama\s+[0-9]+|Qwen[0-9]?\.?[0-9]?-?[0-9]+[A-Z]?|Gemini\s+[0-9]|Gemma\s+[0-9]|Phi-[0-9])\b',
     'software_versions': r'\b(Next\.js|React|Vue|Python|Node\.js|Tailwind|Postgres|MongoDB|Django|FastAPI)\s+v?(\d+\.?\d*)\b',
-    'prices': r'\$(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:USD|per|/share|/month|/user)?',
+    'prices_usd': r'\$(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:USD|per|/share|/month|/user)?',
+    'prices_rub': r'(\d+(?:[\s.,]\d{3})*(?:,\d+)?)\s*(?:руб|₽|RUB)',
+    'prices_eur': r'€\s*(\d+(?:,\d{3})*(?:\.\d+)?)',
+    'prices_gbp': r'£\s*(\d+(?:,\d{3})*(?:\.\d+)?)',
     'percentages': r'(\d+(?:\.\d+)?)\s*%',
     'crypto_tickers': r'\b(BTC|ETH|SOL|USDT|BNB|XRP|ADA|DOT)\b',
     'stock_tickers': r'\b(AAPL|MSFT|NVDA|GOOGL|TSLA|META|AMZN|NFLX)\b',
     'company_names': r'\b(OpenAI|Anthropic|Zhipu|DeepSeek|Mistral|Cerebras|Groq)\b',
     'api_names': r'\b(Stripe API|OpenAI API|Yahoo Finance|Bloomberg|CoinGecko|Alpha Vantage)\b',
-    'regulations': r'\b(SEC Rule|FINRA Rule|GDPR|CCPA|MiFID|HIPAA|SOX)\b',
+    'regulations_us': r'\b(SEC Rule|FINRA Rule|GDPR|CCPA|MiFID|HIPAA|SOX)\b',
+    'regulations_ru': r'\b(152-ФЗ|115-ФЗ|НДФЛ|ГОСТ|ФНС|ЦБ РФ)\b',
     'people': r'\b(CEO|CTO|CFO|founder)\s+(?:of\s+)?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b',
     'doi': r'\b(10\.\d{4,}/[^\s]+)\b',
     'arxiv': r'\b(arxiv:\d{4}\.\d{4,5})\b',
@@ -199,37 +203,54 @@ def web_search(query: str, num: int = 3) -> List[Dict]:
 
 
 def verify_claim(claim: Dict) -> Dict:
-    query = f"{claim['text']} {claim['category']} latest 2025"
+    query = f"{claim['text']} {claim['category']} latest 2026"
     results = web_search(query, num=3)
     
     if not results:
-        return {**claim, 'verified': False, 'reason': 'no_search_results', 'sources': []}
+        return {**claim, 'verified': False, 'reason': 'no_search_results', 'sources': [], 'confidence': 0.0}
     
     claim_lower = claim['text'].lower()
+    matches = 0
+    sources_used = []
     for r in results:
         snippet = (r.get('snippet') or '').lower()
         name = (r.get('name') or '').lower()
-        if claim['category'] == 'model_versions':
+        sources_used.append(r.get('url', ''))
+        if claim['category'] in ('model_versions', 'software_versions'):
             version_match = re.search(r'(\d+\.?\d*)', claim['text'])
             if version_match:
                 version = version_match.group(1)
                 if version in snippet or version in name:
-                    return {**claim, 'verified': True, 'sources': [r.get('url', '')]}
+                    matches += 1
         elif claim_lower in snippet or claim_lower in name:
-            return {**claim, 'verified': True, 'sources': [r.get('url', '')]}
+            matches += 1
     
-    return {**claim, 'verified': False, 'reason': 'not_found_in_results',
-            'sources': [r.get('url', '') for r in results]}
+    # Confidence based on number of sources confirming
+    confidence = min(1.0, matches / 3.0)
+    
+    if matches >= 2:
+        return {**claim, 'verified': True, 'sources': sources_used[:3], 'confidence': confidence, 'reason': 'multi_source_confirmed'}
+    elif matches == 1:
+        return {**claim, 'verified': True, 'sources': sources_used[:2], 'confidence': confidence, 'reason': 'single_source'}
+    else:
+        return {**claim, 'verified': False, 'reason': 'not_found_in_results',
+                'sources': sources_used, 'confidence': 0.0}
 
 
 def annotate_output(text: str, claims: List[Dict]) -> str:
+    """Annotate OUTPUT with [VERIFIED] / [UNVERIFIED] tags. Markdown-safe."""
     annotated = text
     sorted_claims = sorted(claims, key=lambda c: c.get('position', 0), reverse=True)
     for c in sorted_claims:
         if c.get('verified') is True:
             sources = c.get('sources', [''])[:1]
             src = sources[0] if sources else ''
-            tag = f" [VERIFIED" + (f": {src[:50]}" if src else "") + "]"
+            # Sanitize URL for markdown safety
+            if src:
+                src_safe = src.replace(']', '%5D').replace('[', '%5B')[:60]
+                tag = f" [VERIFIED" + (f": {src_safe}" if src_safe else "") + f" (conf:{c.get('confidence',0):.1f})]"
+            else:
+                tag = f" [VERIFIED (conf:{c.get('confidence',0):.1f})]"
         elif c.get('verified') is False:
             tag = f" [UNVERIFIED: needs manual check]"
         else:
@@ -240,6 +261,11 @@ def annotate_output(text: str, claims: List[Dict]) -> str:
             annotated = annotated[:pos] + tag + annotated[pos:]
     
     return annotated
+
+
+def truth_gateway_batch(outputs: List[str], verify: bool = True, max_claims: int = 10) -> List[Dict]:
+    """Batch processing for multiple OUTPUTs."""
+    return [truth_gateway(out, verify=verify, max_claims=max_claims) for out in outputs]
 
 
 def truth_gateway(output: str, verify: bool = True, max_claims: int = 10) -> Dict:

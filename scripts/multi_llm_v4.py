@@ -26,7 +26,7 @@ import random
 import urllib.request
 import urllib.error
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, List
 
 # Import truth_gateway
 sys.path.insert(0, '/home/z/my-project/scripts')
@@ -139,7 +139,12 @@ def call_pollinations(system_prompt: str, user_prompt: str, timeout: int = 90) -
 
 # === LOCAL Qwen3.5-4B (newest Feb 2026) ===
 
+import threading
+import atexit
+import signal
+
 _LOCAL_LLM = None
+_LOCAL_LOCK = threading.Lock()
 _LOCAL_MODELS = [
     "/home/z/my-project/models/Qwen3.5-4B-Q5_K_M.gguf",  # primary (Feb 2026, newest)
     "/home/z/my-project/models/Qwen3-4B-Q5_K_M.gguf",  # fallback (Apr 2025)
@@ -149,29 +154,49 @@ _LOCAL_MODELS = [
 
 
 def get_local_llm():
+    """Thread-safe lazy loading of local model."""
     global _LOCAL_LLM
     if _LOCAL_LLM is None:
-        try:
-            from llama_cpp import Llama
-            for path in _LOCAL_MODELS:
-                if Path(path).exists():
-                    print(f"  [init] Loading local model: {Path(path).name}", flush=True)
-                    _LOCAL_LLM = Llama(
-                        model_path=path,
-                        n_ctx=4096,
-                        n_threads=4,
-                        n_gpu_layers=0,
-                        verbose=False,
-                        flash_attn=True,
-                    )
-                    print(f"  [init] ✓ Loaded {Path(path).name}", flush=True)
-                    break
-            if _LOCAL_LLM is None:
-                return None
-        except Exception as e:
-            print(f"  [init] Local LLM init failed: {e}", flush=True)
-            return None
+        with _LOCAL_LOCK:  # Only one thread loads
+            if _LOCAL_LLM is None:  # Double-check
+                try:
+                    from llama_cpp import Llama
+                    for path in _LOCAL_MODELS:
+                        if Path(path).exists():
+                            print(f"  [init] Loading local model: {Path(path).name}", flush=True)
+                            _LOCAL_LLM = Llama(
+                                model_path=path,
+                                n_ctx=4096,
+                                n_threads=4,
+                                n_gpu_layers=0,
+                                verbose=False,
+                                flash_attn=True,
+                            )
+                            print(f"  [init] ✓ Loaded {Path(path).name}", flush=True)
+                            break
+                    if _LOCAL_LLM is None:
+                        return None
+                except Exception as e:
+                    print(f"  [init] Local LLM init failed: {e}", flush=True)
+                    return None
     return _LOCAL_LLM
+
+
+# Graceful shutdown
+def _cleanup():
+    global _LOCAL_LLM
+    if _LOCAL_LLM is not None:
+        print("[cleanup] Releasing local model...", flush=True)
+        _LOCAL_LLM = None
+
+atexit.register(_cleanup)
+
+def _signal_handler(signum, frame):
+    _cleanup()
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, _signal_handler)
+signal.signal(signal.SIGTERM, _signal_handler)
 
 
 def call_local(system_prompt: str, user_prompt: str, max_tokens: int = 2500) -> dict:
@@ -209,15 +234,17 @@ def call_local(system_prompt: str, user_prompt: str, max_tokens: int = 2500) -> 
 
 class MultiLLMv4:
     """
-    Cascade + Truth Gateway:
+    Cascade + Truth Gateway + concurrent + health check:
     1. z-ai (best quality)
-    2. Local Qwen3-4B (always available, fast, smart)
+    2. Local Qwen3.5-4B (always available, fast, smart)
     3. Pollinations (remote fallback)
     
     After generation: truth_gateway verifies all factual claims.
+    Thread-safe: uses Lock for local model access.
     """
     def __init__(self, cache_path: Optional[Path] = None, verbose: bool = True,
-                 enable_truth_gateway: bool = True, max_verify_claims: int = 8):
+                 enable_truth_gateway: bool = True, max_verify_claims: int = 8,
+                 max_workers: int = 1):
         self.cache = Cache(cache_path) if cache_path else None
         self.limiter_zai = RateLimiter(min_delay=3.0, max_delay=120.0)
         self.limiter_poll = RateLimiter(min_delay=1.0, max_delay=30.0)
@@ -225,6 +252,8 @@ class MultiLLMv4:
         self.verbose = verbose
         self.enable_tg = enable_truth_gateway
         self.max_verify = max_verify_claims
+        self.max_workers = max_workers
+        self._cache_lock = threading.Lock() if cache_path else None
         self.stats = {
             "zai_success": 0, "zai_fail": 0,
             "poll_success": 0, "poll_fail": 0,
@@ -235,6 +264,38 @@ class MultiLLMv4:
         if self.verbose:
             print("  [init] Preloading local model...", flush=True)
         get_local_llm()
+
+    def health_check(self) -> Dict:
+        """Check health of all providers."""
+        health = {"z-ai": "unknown", "local": "unknown", "pollinations": "unknown"}
+        try:
+            result = call_zai("ping", "ping", timeout=10)
+            health["z-ai"] = "ok" if result["success"] else "down"
+        except:
+            health["z-ai"] = "down"
+        health["local"] = "ok" if get_local_llm() is not None else "down"
+        try:
+            import urllib.request
+            req = urllib.request.Request("https://text.pollinations.ai/models",
+                                         headers={"User-Agent": "Mozilla/5.0"})
+            urllib.request.urlopen(req, timeout=5)
+            health["pollinations"] = "ok"
+        except:
+            health["pollinations"] = "down"
+        return health
+
+    def chat_concurrent(self, requests: List[Dict]) -> List[Dict]:
+        """Process multiple requests concurrently."""
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        results = [None] * len(requests)
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            futures = {executor.submit(self.chat, r["system"], r["user"], r.get("max_retries", 2),
+                                        r.get("min_length", 200), r.get("verify", True)): i
+                       for i, r in enumerate(requests)}
+            for future in as_completed(futures):
+                idx = futures[future]
+                results[idx] = future.result()
+        return results
 
     def log(self, msg: str):
         if self.verbose:
