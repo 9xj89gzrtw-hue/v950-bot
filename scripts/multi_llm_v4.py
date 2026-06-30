@@ -137,13 +137,14 @@ def call_pollinations(system_prompt: str, user_prompt: str, timeout: int = 90) -
         return {"success": False, "error": str(e), "provider": "pollinations"}
 
 
-# === LOCAL Qwen3-4B (newest, smart, fast) ===
+# === LOCAL Qwen3.5-4B (newest Feb 2026) ===
 
 _LOCAL_LLM = None
 _LOCAL_MODELS = [
-    "/home/z/my-project/models/Qwen3-4B-Q5_K_M.gguf",  # primary (newest 2025)
-    "/home/z/my-project/models/Qwen2.5-7B-Instruct-Q5_K_M.gguf",  # fallback (smarter)
-    "/home/z/my-project/models/qwen2.5-3b-instruct-q5_k_m.gguf",  # last resort (fast)
+    "/home/z/my-project/models/Qwen3.5-4B-Q5_K_M.gguf",  # primary (Feb 2026, newest)
+    "/home/z/my-project/models/Qwen3-4B-Q5_K_M.gguf",  # fallback (Apr 2025)
+    "/home/z/my-project/models/Qwen2.5-7B-Instruct-Q5_K_M.gguf",  # last resort (smarter but slower)
+    "/home/z/my-project/models/qwen2.5-3b-instruct-q5_k_m.gguf",  # emergency (fast)
 ]
 
 

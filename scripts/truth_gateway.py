@@ -29,29 +29,80 @@ ETERNAL_PATTERNS = [
     r'\b(World War II|WW2|Вторая мировая)\b',
 ]
 
+# Today's date — used to determine if dates are past (eternal) or future/current (changing)
+from datetime import datetime, timedelta
+TODAY = datetime.now()
+# Past dates older than 6 months are HISTORICAL (eternal)
+# Recent past (<6 months) and future dates are CHANGING
+HISTORICAL_CUTOFF = TODAY - timedelta(days=180)  # 6 months ago
+CURRENT_YEAR = TODAY.year
+
 # Changing facts patterns (требуют проверки)
+# FIXED: dates only flag if FUTURE or RECENT (<6 months past)
 CHANGING_PATTERNS = {
-    'model_versions': r'\b(GPT-[0-9]+|GLM-[0-9]+|Claude\s+[0-9]+|Llama\s+[0-9]+|Qwen[0-9]?\.?[0-9]?-?[0-9]+[A-Z]?|Gemini\s+[0-9])\b',
-    'software_versions': r'\b(Next\.js|React|Vue|Python|Node\.js|Tailwind|Postgres|MongoDB)\s+v?(\d+\.?\d*)\b',
+    'model_versions': r'\b(GPT-[0-9]+|GLM-[0-9]+|Claude\s+[0-9]+|Llama\s+[0-9]+|Qwen[0-9]?\.?[0-9]?-?[0-9]+[A-Z]?|Gemini\s+[0-9]|Gemma\s+[0-9]|Phi-[0-9])\b',
+    'software_versions': r'\b(Next\.js|React|Vue|Python|Node\.js|Tailwind|Postgres|MongoDB|Django|FastAPI)\s+v?(\d+\.?\d*)\b',
     'prices': r'\$(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:USD|per|/share|/month|/user)?',
     'percentages': r'(\d+(?:\.\d+)?)\s*%',
-    'dates_future': r'\b(20[2-9][0-9])\b',
     'crypto_tickers': r'\b(BTC|ETH|SOL|USDT|BNB|XRP|ADA|DOT)\b',
     'stock_tickers': r'\b(AAPL|MSFT|NVDA|GOOGL|TSLA|META|AMZN|NFLX)\b',
-    'company_names': r'\b(OpenAI|Anthropic|Zhipu|DeepSeek|Mistral)\b',
-    'api_names': r'\b(Stripe API|OpenAI API|Yahoo Finance|Bloomberg|CoinGecko)\b',
+    'company_names': r'\b(OpenAI|Anthropic|Zhipu|DeepSeek|Mistral|Cerebras|Groq)\b',
+    'api_names': r'\b(Stripe API|OpenAI API|Yahoo Finance|Bloomberg|CoinGecko|Alpha Vantage)\b',
+    'regulations': r'\b(SEC Rule|FINRA Rule|GDPR|CCPA|MiFID|HIPAA|SOX)\b',
+    'people': r'\b(CEO|CTO|CFO|founder)\s+(?:of\s+)?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b',
+    'doi': r'\b(10\.\d{4,}/[^\s]+)\b',
+    'arxiv': r'\b(arxiv:\d{4}\.\d{4,5})\b',
+    'statistics': r'\b(GDP|ВВП|population|население|market share|рыночная доля)\s+(?:of\s+)?(?:is\s+|was\s+)?(\d+(?:\.\d+)?)\s*(?:%|billion|million|trillion|млрд|млн|трлн)\b',
 }
 
 
 def is_eternal(text: str) -> bool:
+    """Проверка на вечный факт."""
     for pattern in ETERNAL_PATTERNS:
         if re.search(pattern, text, re.IGNORECASE):
             return True
     return False
 
 
+def is_historical_date(date_str: str) -> bool:
+    """Проверка — является ли дата исторической (>6 месяцев назад)."""
+    try:
+        # Try parsing as year only
+        year = int(date_str)
+        if year < CURRENT_YEAR - 1:
+            return True  # 2+ years ago = historical
+        if year >= CURRENT_YEAR:
+            return False  # current or future = changing
+        # Current year - 1: check if more than 6 months ago
+        # For year-only, assume Jan 1 of that year
+        date_obj = datetime(year, 1, 1)
+        return date_obj < HISTORICAL_CUTOFF
+    except:
+        return False
+
+
 def extract_claims(text: str) -> List[Dict]:
+    """Извлечение factual claims из текста."""
     claims = []
+    
+    # Handle dates separately — only flag future/recent
+    for match in re.finditer(r'\b(20[2-9][0-9])\b', text):
+        year_str = match.group(1)
+        if is_historical_date(year_str):
+            continue  # skip historical dates
+        claim_text = year_str
+        start = max(0, match.start() - 50)
+        context = text[start:match.end() + 50]
+        if is_eternal(context):
+            continue
+        claims.append({
+            'category': 'dates_current_future',
+            'text': claim_text,
+            'context': context,
+            'position': match.start(),
+        })
+    
+    # Other categories
     for category, pattern in CHANGING_PATTERNS.items():
         for match in re.finditer(pattern, text, re.IGNORECASE):
             claim_text = match.group(0)
@@ -66,6 +117,7 @@ def extract_claims(text: str) -> List[Dict]:
                 'position': match.start(),
             })
     
+    # Dedupe by text
     seen = set()
     unique = []
     for c in claims:
