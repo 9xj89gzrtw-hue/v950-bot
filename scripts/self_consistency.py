@@ -32,9 +32,11 @@ def generate_n_responses(system_prompt: str, user_prompt: str, n: int = 3,
 
 def extract_answer(response: str) -> str:
     """Extract the final answer from a response (after reasoning)."""
-    # Look for "Answer:" or "Final answer:" or last sentence
+    # Look for "Answer: X" or "#### X" or last number
     patterns = [
-        r'(?:final answer|answer|ответ|итог)\s*[:=]\s*(.+?)(?:\n|$)',
+        r'(?:final answer|answer|ответ|итог)\s*[:=]\s*\$?([\d,.-]+)',
+        r'####\s*\$?([\d,.-]+)',
+        r'(?:final answer|answer|ответ)\s*[:=]\s*([A-D])\b',
         r'(?:therefore|thus|so|значит|итак)\s*,?\s*(.+?)(?:\n|$)',
         r'\*\*(.+?)\*\*\s*$',  # bold at end
     ]
@@ -42,6 +44,11 @@ def extract_answer(response: str) -> str:
         match = re.search(pattern, response, re.IGNORECASE)
         if match:
             return match.group(1).strip()[:200]
+    
+    # Fallback: last number in response
+    numbers = re.findall(r'[\d,]+(?:\.\d+)?', response)
+    if numbers:
+        return numbers[-1].replace(',', '')
     
     # Fallback: last 100 chars
     return response.strip()[-200:]
