@@ -6,10 +6,10 @@ services:
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health
     envVars:
-      - key: PYTHONUNBUFFERED
-        value: "1"
       - key: TELEGRAM_BOT_TOKEN
-        sync: false
+        value: "8736969974:AAG66M9I0uGwRUksTt1iJt7v-n-f7T7BpnE"
       - key: TELEGRAM_CHAT_ID
-        sync: false
+        value: "396449039"
+      - key: PORT
+        value: "10000"
     autoDeploy: true
