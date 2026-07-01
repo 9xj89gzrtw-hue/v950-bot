@@ -364,14 +364,15 @@ def handle_message(text, config):
         args = parts[1:]
         
         commands = {
-            'status': cmd_status, 'help': cmd_help,
-            'search': cmd_search, 'web': cmd_search,
-            'image': cmd_image, 'img': cmd_image,
-            'browse': cmd_browse, 'open': cmd_browse,
+            'status': cmd_status, 'help': cmd_help, 'start': cmd_status,
+            'chat': lambda args, cfg: zai_chat(get_meta_prompt(), ' '.join(args), max_tokens=2000) if args else "Usage: /chat <message>",
+            'search': cmd_search, 'web': cmd_search, 'find': cmd_search,
+            'image': cmd_image, 'img': cmd_image, 'gen': cmd_image,
+            'browse': cmd_browse, 'open': cmd_browse, 'read': cmd_browse,
             'screenshot': cmd_screenshot, 'ss': cmd_screenshot,
             'doc': cmd_doc, 'document': cmd_doc,
             'analyze': cmd_analyze, 'stats': cmd_analyze,
-            'code': cmd_code,
+            'code': cmd_code, 'python': cmd_code,
         }
         
         if cmd in commands:
@@ -379,7 +380,9 @@ def handle_message(text, config):
         elif cmd == 'start':
             return cmd_status(args, config)
         else:
-            return f"Unknown command: /{cmd}\nUse /help for available commands"
+            # Unknown command → treat as regular chat
+            response = zai_chat(get_meta_prompt(), text, max_tokens=2000)
+            return response
     
     # Default: chat with v9.99
     response = zai_chat(get_meta_prompt(), text, max_tokens=2000)
