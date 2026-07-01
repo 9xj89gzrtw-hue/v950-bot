@@ -1,0 +1,32 @@
+name: Telegram Bot (24/7)
+
+on:
+  schedule:
+    # Every 5 minutes (GitHub Actions minimum)
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Manual trigger for testing
+
+jobs:
+  bot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install deps
+        run: pip install requests httpx
+        
+      - name: Run bot
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ZAI_API_KEY: Z.ai
+          ZAI_BASE_URL: https://internal-api.z.ai/v1
+          ZAI_CHAT_ID: ${{ secrets.ZAI_CHAT_ID }}
+          ZAI_USER_ID: ${{ secrets.ZAI_USER_ID }}
+          ZAI_TOKEN: ${{ secrets.ZAI_TOKEN }}
+        run: python3 github_bot.py
