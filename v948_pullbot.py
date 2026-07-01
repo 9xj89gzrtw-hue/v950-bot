@@ -10,6 +10,8 @@ Upgraded from v948:
 - Proactive: suggests actions, doesn't just respond
 """
 import json, os, sys, time, urllib.request, subprocess, re
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import threading
 from pathlib import Path
 
 # === Config ===
@@ -444,6 +446,29 @@ def process_once(config):
     
     return processed
 
+
+def start_health_server():
+    """Health check server for Render.com (port 10000)."""
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path == '/health':
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(b'{"status":"ok","version":"v9.99","capabilities":110}')
+            else:
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(b'{"bot":"v9.99","status":"running"}')
+        def log_message(self, *args): pass
+    try:
+        server = HTTPServer(('0.0.0.0', 10000), Handler)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        print("[HEALTH] server on :10000", flush=True)
+    except Exception as e:
+        print(f"[HEALTH] error: {e}", flush=True)
+
 def main():
     import argparse
     parser = argparse.ArgumentParser()
@@ -460,6 +485,7 @@ def main():
     print(f"📊 79 capabilities | LLM: GLM-4-Plus + Pollinations fallback")
     print(f"📝 Meta-prompt: v9.99-FINAL")
     
+    start_health_server()
     if args.loop:
         while True:
             try:

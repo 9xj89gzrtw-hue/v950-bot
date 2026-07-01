@@ -1,1 +1,73 @@
-z3-solver>=4.16.0
+# Core
+requests
+urllib3
+httpx
+aiohttp
+
+# Documents
+python-docx
+openpyxl
+python-pptx
+reportlab
+PyMuPDF
+pdfplumber
+weasyprint
+pypandoc
+
+# Data
+pandas
+numpy
+scikit-learn
+openpyxl
+
+# Images
+Pillow
+pytesseract
+
+# Browser
+playwright
+
+# NLP
+spacy
+nltk
+
+# Audio/Video
+pydub
+librosa
+soundfile
+
+# Utils
+pydantic
+PyYAML
+jsonschema
+loguru
+apscheduler
+qrcode
+faker
+rich
+orjson
+feedparser
+
+# Web frameworks
+fastapi
+uvicorn
+starlette
+gradio
+
+# Auth
+PyJWT
+oauthlib
+cryptography
+authlib
+
+# Real-time
+websockets
+sse-starlette
+
+# Cloud
+boto3
+huggingface_hub
+
+# Graph
+networkx
+bokeh
