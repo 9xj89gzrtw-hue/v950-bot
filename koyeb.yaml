@@ -1,0 +1,14 @@
+# Koyeb deployment config — FREE tier, NEVER sleeps
+services:
+  - name: v999-telegram-bot
+    instance_type: free
+    env:
+      - key: TELEGRAM_BOT_TOKEN
+        value: "8736969974:AAG66M9I0uGwRUksTt1iJt7v-n-f7T7BpnE"
+      - key: TELEGRAM_CHAT_ID
+        value: "396449039"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+    routes:
+      - path: /
+    port: 10000
