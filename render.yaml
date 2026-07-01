@@ -12,4 +12,14 @@ services:
         value: "396449039"
       - key: PORT
         value: "10000"
+      - key: ZAI_TOKEN
+        value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiY2VlMDRmMWItYmU2Yy00YTBkLWJkNDYtZTcyNDAzZjk4Y2EwIiwiY2hhdF9pZCI6ImNoYXQtMDAzYWVmNDEtZGE5Yy00ZGUyLTk4NTItNmYxY2IwYzFhODZjIiwicGxhdGZvcm0iOiJ6YWkifQ.rwxeBszZRqRvSN92ovhPLzsBALBdNE0Q03OdzwtwIIA"
+      - key: ZAI_CHAT_ID
+        value: "chat-003aef41-da9c-4de2-9852-6f1cb0c1a86c"
+      - key: ZAI_USER_ID
+        value: "cee04f1b-be6c-4a0d-bd46-e72403f98ca0"
+      - key: ZAI_API_KEY
+        value: "Z.ai"
+      - key: ZAI_BASE_URL
+        value: "https://internal-api.z.ai/v1"
     autoDeploy: true
